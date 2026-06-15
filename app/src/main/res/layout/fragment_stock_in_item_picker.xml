@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:context=".ui.movement.StockInItemPickerFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_md"
+        android:paddingEnd="@dimen/space_md">
+
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_back"
+            app:tint="@color/inventory_text_primary" />
+
+        <TextView
+            android:id="@+id/locationTitleTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_section"
+            android:textStyle="bold"
+            tools:text="puchong" />
+
+        <ImageButton
+            android:id="@+id/addItemButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/add_item"
+            android:src="@drawable/ic_add"
+            app:tint="@color/inventory_text_primary" />
+    </LinearLayout>
+
+    <View style="@style/Widget.InventoryHub.FormDivider" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.InventoryHub.TextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/space_md"
+        android:hint="@string/search_for_item"
+        app:startIconDrawable="@drawable/ic_search">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/inStockChip"
+        style="@style/Widget.InventoryHub.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_sm"
+        android:checked="true"
+        android:text="@string/in_stock" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/itemsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_lg"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_stock_in_picker" />
+
+    <TextView
+        android:id="@+id/emptyTextView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="@dimen/space_lg"
+        android:text="@string/no_items_for_location"
+        android:textColor="@color/inventory_text_secondary"
+        android:visibility="gone" />
+
+    <View style="@style/Widget.InventoryHub.SectionBand" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_md"
+        android:paddingEnd="@dimen/space_md">
+
+        <TextView
+            android:id="@+id/summaryTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_section"
+            android:textStyle="bold"
+            tools:text="1 item / 30" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/doneButton"
+            style="@style/Widget.InventoryHub.Button.Primary"
+            android:layout_width="112dp"
+            android:layout_height="56dp"
+            android:text="@string/done" />
+    </LinearLayout>
+</LinearLayout>

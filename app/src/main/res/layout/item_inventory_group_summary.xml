@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.InventoryHub.HomeCard"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/items_group_card_height"
+    android:layout_marginBottom="@dimen/space_md"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/card_padding">
+
+        <TextView
+            android:id="@+id/groupNameTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_section"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/percentageTextView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Meat" />
+
+        <TextView
+            android:id="@+id/percentageTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_group_percentage_badge"
+            android:textColor="@color/inventory_primary"
+            android:textSize="@dimen/text_size_caption"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="47%" />
+
+        <FrameLayout
+            android:id="@+id/imageStack"
+            android:layout_width="@dimen/items_group_image_stack_width"
+            android:layout_height="@dimen/items_group_image_size"
+            app:layout_constraintBottom_toBottomOf="@id/itemCountContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/itemCountContainer">
+
+            <ImageView
+                android:id="@+id/previewImageOne"
+                android:layout_width="@dimen/items_group_image_size"
+                android:layout_height="@dimen/items_group_image_size"
+                android:background="@drawable/bg_inventory_image_placeholder"
+                android:contentDescription="@string/item_image"
+                android:scaleType="centerCrop" />
+
+            <ImageView
+                android:id="@+id/previewImageTwo"
+                android:layout_width="@dimen/items_group_image_size"
+                android:layout_height="@dimen/items_group_image_size"
+                android:layout_marginStart="@dimen/items_group_image_overlap_offset"
+                android:background="@drawable/bg_inventory_image_placeholder"
+                android:contentDescription="@string/item_image"
+                android:scaleType="centerCrop" />
+
+            <ImageView
+                android:id="@+id/previewImageThree"
+                android:layout_width="@dimen/items_group_image_size"
+                android:layout_height="@dimen/items_group_image_size"
+                android:layout_marginStart="@dimen/items_group_image_third_offset"
+                android:background="@drawable/bg_inventory_image_placeholder"
+                android:contentDescription="@string/item_image"
+                android:scaleType="centerCrop" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/itemCountContainer"
+            android:layout_width="@dimen/items_group_metric_width"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintStart_toEndOf="@id/imageStack"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/quantityContainer">
+
+            <TextView
+                android:id="@+id/itemCountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/inventory_text_primary"
+                android:textSize="@dimen/text_size_title"
+                android:textStyle="bold"
+                tools:text="2" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/items"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="@dimen/text_size_caption" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/quantityContainer"
+            android:layout_width="@dimen/items_group_metric_width"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/quantityTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/inventory_text_primary"
+                android:textSize="@dimen/text_size_title"
+                android:textStyle="bold"
+                tools:text="134" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/quantity"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="@dimen/text_size_caption" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

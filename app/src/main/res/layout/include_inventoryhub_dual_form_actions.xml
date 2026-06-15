@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/space_md"
+    android:paddingTop="@dimen/space_sm"
+    android:paddingEnd="@dimen/space_md"
+    android:paddingBottom="@dimen/space_lg">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/secondaryButton"
+        style="@style/Widget.InventoryHub.Button.Outlined"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/button_standard_height"
+        android:layout_weight="1"
+        app:iconGravity="textStart" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/primaryButton"
+        style="@style/Widget.InventoryHub.Button.Primary"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/button_standard_height"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_weight="1"
+        app:iconGravity="textStart" />
+</LinearLayout>

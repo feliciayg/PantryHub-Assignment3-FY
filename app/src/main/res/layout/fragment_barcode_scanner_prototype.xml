@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_background"
+    android:orientation="vertical"
+    tools:theme="@style/Theme.InventoryHub">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        android:background="@color/inventory_surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_md"
+        android:paddingEnd="@dimen/space_md">
+
+        <ImageButton
+            android:id="@+id/closeButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            android:src="@drawable/ic_close"
+            app:tint="@color/inventory_text_primary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:layout_weight="1"
+            android:text="@string/scan_barcode"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_section"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:layout_marginStart="@dimen/space_xl"
+        android:layout_marginEnd="@dimen/space_xl">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_barcode_scanner_frame" />
+
+        <ImageView
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center"
+            android:alpha="0.55"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_barcode_scan"
+            app:tint="@color/inventory_text_secondary" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/item_form_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_form_horizontal_padding"
+        android:gravity="center"
+        android:text="@string/align_barcode_inside_frame"
+        android:textColor="@color/inventory_text_secondary"
+        android:textSize="@dimen/text_size_body" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/useSampleBarcodeButton"
+        style="@style/Widget.InventoryHub.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_standard_height"
+        android:layout_marginStart="@dimen/item_form_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_form_horizontal_padding"
+        android:layout_marginBottom="@dimen/space_xl"
+        android:text="@string/use_sample_barcode" />
+</LinearLayout>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/space_lg">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_md"
+        android:background="@color/inventory_outline" />
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_form_horizontal_padding"
+        android:paddingEnd="@dimen/item_form_horizontal_padding"
+        android:paddingBottom="@dimen/space_sm"
+        android:textColor="@color/inventory_text_primary"
+        android:textSize="@dimen/text_size_section"
+        android:textStyle="bold"
+        tools:text="Select Item" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.InventoryHub.TextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/item_form_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_form_horizontal_padding"
+        android:layout_marginBottom="@dimen/space_sm"
+        android:hint="@string/search"
+        app:startIconDrawable="@drawable/ic_search">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:singleLine="true"
+            tools:text="" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:id="@+id/rowsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/emptyTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="@dimen/space_lg"
+        android:text="@string/no_results_found"
+        android:textColor="@color/inventory_text_secondary"
+        android:visibility="gone" />
+</LinearLayout>

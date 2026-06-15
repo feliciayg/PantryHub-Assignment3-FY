@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/sendPurchaseEmail"
+        android:title="@string/send_email"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cancelPurchase"
+        android:title="@string/cancel_order"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/deletePurchase"
+        android:title="@string/delete"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/restorePurchase"
+        android:title="@string/restore"
+        app:showAsAction="never" />
+</menu>

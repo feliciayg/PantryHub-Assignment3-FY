@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.auth.LoginFragment"
+        android:label="@string/login">
+        <action
+            android:id="@+id/action_loginFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_storeSetupFragment"
+            app:destination="@id/storeSetupFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.auth.SignUpFragment"
+        android:label="@string/sign_up">
+        <action
+            android:id="@+id/action_signUpFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_signUpFragment_to_storeSetupFragment"
+            app:destination="@id/storeSetupFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/storeSetupFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.store.StoreSetupFragment"
+        android:label="@string/store_setup_title">
+        <action
+            android:id="@+id/action_storeSetupFragment_to_createStoreFragment"
+            app:destination="@id/createStoreFragment" />
+        <action
+            android:id="@+id/action_storeSetupFragment_to_joinStoreFragment"
+            app:destination="@id/joinStoreFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createStoreFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.store.CreateStoreFragment"
+        android:label="@string/create_store" />
+
+    <fragment
+        android:id="@+id/joinStoreFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.store.JoinStoreFragment"
+        android:label="@string/join_store" />
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.home.HomeFragment"
+        android:label="@string/home">
+        <action
+            android:id="@+id/action_homeFragment_to_inventoryItemDetailFragment"
+            app:destination="@id/inventoryItemDetailFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_addEditInventoryItemFragment"
+            app:destination="@id/addEditInventoryItemFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_helpFragment"
+            app:destination="@id/helpFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/helpFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.help.HelpFragment"
+        android:label="@string/help" />
+
+    <fragment
+        android:id="@+id/inventoryFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.InventoryFragment"
+        android:label="@string/items_tab">
+        <action
+            android:id="@+id/action_inventoryFragment_to_addEditInventoryItemFragment"
+            app:destination="@id/addEditInventoryItemFragment" />
+        <action
+            android:id="@+id/action_inventoryFragment_to_inventoryItemDetailFragment"
+            app:destination="@id/inventoryItemDetailFragment" />
+        <action
+            android:id="@+id/action_inventoryFragment_to_archivedInventoryFragment"
+            app:destination="@id/archivedInventoryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/archivedInventoryFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.ArchivedInventoryFragment"
+        android:label="@string/archived_items" />
+
+    <fragment
+        android:id="@+id/addEditInventoryItemFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.AddEditInventoryItemFragment"
+        android:label="@string/add_inventory_item">
+        <argument
+            android:name="mode"
+            app:argType="string"
+            android:defaultValue="add" />
+        <argument
+            android:name="inventoryItemId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="prefillName"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="prefillQuantity"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="prefillUnit"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="sourceRestockOrderId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_addEditInventoryItemFragment_to_categoryPickerFragment"
+            app:destination="@id/categoryPickerFragment" />
+        <action
+            android:id="@+id/action_addEditInventoryItemFragment_to_barcodeScannerPrototypeFragment"
+            app:destination="@id/barcodeScannerPrototypeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/barcodeScannerPrototypeFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.BarcodeScannerPrototypeFragment"
+        android:label="@string/scan_barcode" />
+
+    <fragment
+        android:id="@+id/categoryPickerFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.CategoryPickerFragment"
+        android:label="@string/category">
+        <argument
+            android:name="currentCategory"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="pendingCategories"
+            app:argType="string[]"
+            android:defaultValue="@null" />
+        <action
+            android:id="@+id/action_categoryPickerFragment_to_addEditSupplierFragment"
+            app:destination="@id/addEditSupplierFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/inventoryItemDetailFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.InventoryItemDetailFragment"
+        android:label="@string/item_detail">
+        <argument
+            android:name="inventoryItemId"
+            app:argType="string" />
+        <argument
+            android:name="summaryBranchId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_inventoryItemDetailFragment_to_addEditInventoryItemFragment"
+            app:destination="@id/addEditInventoryItemFragment" />
+        <action
+            android:id="@+id/action_inventoryItemDetailFragment_to_itemTransactionBreakdownFragment"
+            app:destination="@id/itemTransactionBreakdownFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/inventoryGroupDetailFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.InventoryGroupDetailFragment"
+        android:label="@string/items">
+        <argument android:name="groupOption" app:argType="string" />
+        <argument android:name="groupKey" app:argType="string" />
+        <argument android:name="groupTitle" app:argType="string" />
+        <argument
+            android:name="initialSearch"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/itemTransactionBreakdownFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.storage.ItemTransactionBreakdownFragment"
+        android:label="@string/all_locations">
+        <argument
+            android:name="productKey"
+            app:argType="string" />
+        <argument
+            android:name="branchId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_itemTransactionBreakdownFragment_to_transactionDetailsFragment"
+            app:destination="@id/transactionDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/restockOrdersFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.RestockOrdersFragment"
+        android:label="@string/purchases">
+        <action
+            android:id="@+id/action_restockOrdersFragment_to_newPurchaseFragment"
+            app:destination="@id/newPurchaseFragment" />
+        <action
+            android:id="@+id/action_restockOrdersFragment_to_purchaseFilterFragment"
+            app:destination="@id/purchaseFilterFragment" />
+        <action
+            android:id="@+id/action_restockOrdersFragment_to_purchaseDetailFragment"
+            app:destination="@id/purchaseDetailFragment" />
+        <action
+            android:id="@+id/action_restockOrdersFragment_to_archivedPurchasesFragment"
+            app:destination="@id/archivedPurchasesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/archivedPurchasesFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.ArchivedPurchasesFragment"
+        android:label="@string/archived_purchases" />
+
+    <fragment
+        android:id="@+id/purchaseFilterFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.PurchaseFilterFragment"
+        android:label="@string/filters" />
+
+    <fragment
+        android:id="@+id/newPurchaseFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.NewPurchaseFragment"
+        android:label="@string/new_purchase">
+        <argument
+            android:name="purchaseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_newPurchaseFragment_to_purchaseItemPickerFragment"
+            app:destination="@id/purchaseItemPickerFragment" />
+        <action
+            android:id="@+id/action_newPurchaseFragment_to_categoryPickerFragment"
+            app:destination="@id/categoryPickerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/purchaseItemPickerFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.PurchaseItemPickerFragment"
+        android:label="@string/add_item" />
+
+    <fragment
+        android:id="@+id/purchaseDetailFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.PurchaseDetailFragment"
+        android:label="@string/purchase_detail">
+        <argument
+            android:name="purchaseId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_purchaseDetailFragment_to_purchaseReceiveFragment"
+            app:destination="@id/purchaseReceiveFragment" />
+        <action
+            android:id="@+id/action_purchaseDetailFragment_to_transactionDetailsFragment"
+            app:destination="@id/transactionDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/purchaseReceiveFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.PurchaseReceiveFragment"
+        android:label="@string/partially_receive">
+        <argument
+            android:name="purchaseId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_purchaseReceiveFragment_to_purchaseReceiveItemPickerFragment"
+            app:destination="@id/purchaseReceiveItemPickerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/purchaseReceiveItemPickerFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.restock.PurchaseReceiveItemPickerFragment"
+        android:label="@string/items" />
+
+    <fragment
+        android:id="@+id/memoEditorFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.common.MemoEditorFragment"
+        android:label="@string/memo">
+        <argument
+            android:name="initialValue"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="Memo" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/storeManagementFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.store.StoreManagementFragment"
+        android:label="@string/store_management" />
+
+    <fragment
+        android:id="@+id/membersFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.store.MembersFragment"
+        android:label="@string/settings_members" />
+
+    <fragment
+        android:id="@+id/branchesFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.branch.BranchesFragment"
+        android:label="@string/location_management">
+        <action
+            android:id="@+id/action_branchesFragment_to_branchDetailFragment"
+            app:destination="@id/branchDetailFragment" />
+        <action
+            android:id="@+id/action_branchesFragment_to_addEditBranchFragment"
+            app:destination="@id/addEditBranchFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/branchDetailFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.branch.BranchDetailFragment"
+        android:label="@string/location_details">
+        <argument
+            android:name="branchId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_branchDetailFragment_to_addEditBranchFragment"
+            app:destination="@id/addEditBranchFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addEditBranchFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.branch.AddEditBranchFragment"
+        android:label="@string/add_branch">
+        <argument
+            android:name="branchId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/stockMovementsFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.movement.StockMovementsFragment"
+        android:label="@string/transactions">
+        <action
+            android:id="@+id/action_stockMovementsFragment_to_stockInTransactionFragment"
+            app:destination="@id/stockInTransactionFragment" />
+        <action
+            android:id="@+id/action_stockMovementsFragment_to_transactionFilterFragment"
+            app:destination="@id/transactionFilterFragment" />
+        <action
+            android:id="@+id/action_stockMovementsFragment_to_transactionDetailsFragment"
+            app:destination="@id/transactionDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionFilterFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.movement.TransactionFilterFragment"
+        android:label="@string/filters" />
+
+    <fragment
+        android:id="@+id/transactionDetailsFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.movement.TransactionDetailsFragment"
+        android:label="@string/transaction_details">
+        <argument
+            android:name="transactionId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/stockInTransactionFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.movement.StockInTransactionFragment"
+        android:label="@string/new_transaction">
+        <argument
+            android:name="transactionMode"
+            app:argType="string"
+            android:defaultValue="STOCK_IN" />
+        <argument
+            android:name="editTransactionId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_stockInTransactionFragment_to_stockInItemPickerFragment"
+            app:destination="@id/stockInItemPickerFragment" />
+        <action
+            android:id="@+id/action_stockInTransactionFragment_to_categoryPickerFragment"
+            app:destination="@id/categoryPickerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/stockInItemPickerFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.movement.StockInItemPickerFragment"
+        android:label="@string/add_item">
+        <action
+            android:id="@+id/action_stockInItemPickerFragment_to_addEditInventoryItemFragment"
+            app:destination="@id/addEditInventoryItemFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/suppliersFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.supplier.SuppliersFragment"
+        android:label="@string/supplier_management">
+        <action
+            android:id="@+id/action_suppliersFragment_to_addEditSupplierFragment"
+            app:destination="@id/addEditSupplierFragment" />
+        <action
+            android:id="@+id/action_suppliersFragment_to_supplierDetailFragment"
+            app:destination="@id/supplierDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addEditSupplierFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.supplier.AddEditSupplierFragment"
+        android:label="@string/add_supplier">
+        <argument
+            android:name="supplierId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="partnerType"
+            app:argType="string"
+            android:defaultValue="supplier" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/supplierDetailFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.supplier.SupplierDetailFragment"
+        android:label="@string/supplier_detail">
+        <argument
+            android:name="supplierId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_supplierDetailFragment_to_addEditSupplierFragment"
+            app:destination="@id/addEditSupplierFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.profile.ProfileFragment"
+        android:label="@string/profile" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.settings.SettingsFragment"
+        android:label="@string/settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_storeManagementFragment"
+            app:destination="@id/storeManagementFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_branchesFragment"
+            app:destination="@id/branchesFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_suppliersFragment"
+            app:destination="@id/suppliersFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_membersFragment"
+            app:destination="@id/membersFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_notificationPreferencesFragment"
+            app:destination="@id/notificationPreferencesFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationPreferencesFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.settings.NotificationPreferencesFragment"
+        android:label="@string/notifications" />
+
+    <fragment
+        android:id="@+id/notificationLocationsFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.settings.NotificationLocationsFragment"
+        android:label="@string/alert_location" />
+
+    <fragment
+        android:id="@+id/notificationTimeFragment"
+        android:name="com.example.pantryhub_assignment3_fy.ui.settings.NotificationTimeFragment"
+        android:label="@string/alert_time" />
+
+    <action
+        android:id="@+id/action_global_homeFragment"
+        app:destination="@id/homeFragment"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_loginFragment"
+        app:destination="@id/loginFragment"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
+</navigation>

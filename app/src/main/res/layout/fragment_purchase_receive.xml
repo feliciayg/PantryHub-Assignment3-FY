@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:context=".ui.restock.PurchaseReceiveFragment">
+
+    <include
+        android:id="@+id/formHeader"
+        layout="@layout/include_inventoryhub_form_header" />
+
+    <View style="@style/Widget.InventoryHub.FormDivider" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/receiveTitleTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/item_form_horizontal_padding"
+                android:paddingTop="@dimen/space_lg"
+                android:paddingEnd="@dimen/item_form_horizontal_padding"
+                android:text="@string/stock_in"
+                android:textColor="@color/inventory_text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/item_form_horizontal_padding"
+                android:layout_marginTop="@dimen/space_md"
+                android:layout_marginEnd="@dimen/item_form_horizontal_padding"
+                android:background="@color/inventory_primary" />
+
+            <LinearLayout
+                android:id="@+id/locationRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/location" />
+
+                <TextView
+                    android:id="@+id/locationValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    tools:text="puchong" />
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+
+            <LinearLayout
+                android:id="@+id/itemsRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/items" />
+
+                <TextView
+                    android:id="@+id/itemsValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    tools:text="1 item / 10" />
+
+                <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/selectedItemsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="1"
+                tools:listitem="@layout/item_stock_in_selected" />
+
+            <include layout="@layout/include_inventoryhub_section_band" />
+
+            <LinearLayout
+                android:id="@+id/memoRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/memo" />
+
+                <TextView
+                    android:id="@+id/memoValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    android:text="@string/add_a_note"
+                    android:textColor="@color/inventory_text_secondary" />
+
+                <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/submitButton"
+        style="@style/Widget.InventoryHub.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_marginEnd="@dimen/space_md"
+        android:layout_marginBottom="@dimen/space_lg"
+        android:text="@string/submit" />
+</LinearLayout>

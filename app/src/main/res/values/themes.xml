@@ -1,0 +1,45 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.InventoryHub" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/inventory_primary</item>
+        <item name="colorPrimaryContainer">@color/inventory_primary_container</item>
+        <item name="colorOnPrimary">@color/inventory_on_primary</item>
+        <item name="colorOnPrimaryContainer">@color/inventory_primary_dark</item>
+        <item name="colorSecondary">@color/inventory_primary</item>
+        <item name="colorSecondaryContainer">@color/inventory_surface_overlay</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondaryContainer">@color/inventory_text_primary</item>
+        <item name="colorTertiary">@color/swipe_shop</item>
+        <item name="colorTertiaryContainer">@color/inventory_surface_overlay</item>
+        <item name="colorSurface">@color/inventory_surface</item>
+        <item name="colorSurfaceContainer">@color/inventory_surface_overlay</item>
+        <item name="colorSurfaceContainerLow">@color/inventory_surface_overlay</item>
+        <item name="colorSurfaceContainerHigh">@color/inventory_surface_overlay</item>
+        <item name="colorSurfaceBright">@color/inventory_surface</item>
+        <item name="colorSurfaceDim">@color/inventory_surface</item>
+        <item name="colorSurfaceVariant">@color/inventory_surface_overlay</item>
+        <item name="android:colorBackground">@color/inventory_background</item>
+        <item name="colorError">@color/inventory_coral</item>
+        <item name="colorAccent">@color/inventory_primary</item>
+        <item name="android:colorAccent">@color/inventory_primary</item>
+        <item name="colorControlActivated">@color/inventory_primary</item>
+        <item name="android:colorControlActivated">@color/inventory_primary</item>
+        <item name="colorControlNormal">@color/inventory_nav_unselected</item>
+        <item name="android:colorControlNormal">@color/inventory_nav_unselected</item>
+        <item name="android:navigationBarColor">@color/inventory_surface</item>
+        <item name="android:statusBarColor">@color/inventory_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/inventory_background</item>
+        <item name="materialButtonStyle">@style/Widget.InventoryHub.Button</item>
+        <item name="materialCardViewStyle">@style/Widget.InventoryHub.Card</item>
+        <item name="floatingActionButtonStyle">@style/Widget.InventoryHub.FloatingActionButton</item>
+        <item name="textInputStyle">@style/Widget.InventoryHub.TextInput</item>
+        <item name="bottomNavigationStyle">@style/Widget.InventoryHub.BottomNavigation</item>
+        <item name="chipStyle">@style/Widget.InventoryHub.Chip.Filter</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.InventoryHub.MaterialAlertDialog</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.InventoryHub.BottomSheetDialog</item>
+        <item name="radioButtonStyle">@style/Widget.InventoryHub.RadioButton</item>
+        <item name="checkboxStyle">@style/Widget.InventoryHub.CheckBox</item>
+    </style>
+
+    <style name="Theme.InventoryHub" parent="Base.Theme.InventoryHub" />
+</resources>

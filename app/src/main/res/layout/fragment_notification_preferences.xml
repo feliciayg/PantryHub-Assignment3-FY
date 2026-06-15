@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:theme="@style/Theme.InventoryHub">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        style="@style/Widget.InventoryHub.Toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        app:navigationIcon="@drawable/ic_back"
+        app:title="@string/notifications" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+
+    <TextView
+        style="@style/TextAppearance.InventoryHub.Caption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/page_horizontal_padding"
+        android:paddingTop="@dimen/space_lg"
+        android:paddingEnd="@dimen/page_horizontal_padding"
+        android:text="@string/low_stock_alerts" />
+
+    <LinearLayout
+        android:id="@+id/reminderToggleRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/page_horizontal_padding"
+        android:paddingTop="@dimen/space_md"
+        android:paddingEnd="@dimen/page_horizontal_padding"
+        android:paddingBottom="@dimen/space_md">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/push_notifications"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/expiryReminderSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:checked="true" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/page_horizontal_padding"
+        android:layout_marginEnd="@dimen/page_horizontal_padding"
+        android:background="@color/inventory_outline" />
+
+    <LinearLayout
+        android:id="@+id/locationRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/page_horizontal_padding"
+        android:paddingTop="@dimen/space_md"
+        android:paddingEnd="@dimen/page_horizontal_padding"
+        android:paddingBottom="@dimen/space_md"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/location"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body" />
+
+        <TextView
+            android:id="@+id/locationValueTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxWidth="180dp"
+            android:maxLines="1"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body"
+            tools:text="Total Stock (All Locations)" />
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="@dimen/space_sm"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/inventory_text_secondary" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/locationDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/page_horizontal_padding"
+        android:layout_marginEnd="@dimen/page_horizontal_padding"
+        android:background="@color/inventory_outline"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/timeRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/page_horizontal_padding"
+        android:paddingTop="@dimen/space_md"
+        android:paddingEnd="@dimen/page_horizontal_padding"
+        android:paddingBottom="@dimen/space_md"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/alert_time"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body" />
+
+        <TextView
+            android:id="@+id/timeValueTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body"
+            tools:text="9 AM" />
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="@dimen/space_sm"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/inventory_text_secondary" />
+    </LinearLayout>
+</LinearLayout>

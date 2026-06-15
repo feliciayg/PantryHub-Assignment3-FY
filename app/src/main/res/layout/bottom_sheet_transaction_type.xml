@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/space_lg">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_md"
+        android:background="@color/inventory_outline" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_form_horizontal_padding"
+        android:paddingEnd="@dimen/item_form_horizontal_padding"
+        android:paddingBottom="@dimen/space_sm"
+        android:text="@string/select_transaction_type"
+        android:textColor="@color/inventory_text_primary"
+        android:textSize="@dimen/text_size_section"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/stockInRow"
+        style="@style/Widget.InventoryHub.FormRow"
+        android:contentDescription="@string/stock_in">
+
+        <ImageView
+            android:id="@+id/stockInIcon"
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:layout_marginEnd="@dimen/space_md"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_stock_in" />
+
+        <TextView
+            style="@style/TextAppearance.InventoryHub.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/stock_in" />
+
+        <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+    </LinearLayout>
+
+    <View style="@style/Widget.InventoryHub.FormDivider" />
+
+    <LinearLayout
+        android:id="@+id/stockOutRow"
+        style="@style/Widget.InventoryHub.FormRow"
+        android:contentDescription="@string/stock_out">
+
+        <ImageView
+            android:id="@+id/stockOutIcon"
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:layout_marginEnd="@dimen/space_md"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_stock_out" />
+
+        <TextView
+            style="@style/TextAppearance.InventoryHub.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/stock_out" />
+
+        <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+    </LinearLayout>
+
+    <View style="@style/Widget.InventoryHub.FormDivider" />
+
+    <LinearLayout
+        android:id="@+id/moveStockRow"
+        style="@style/Widget.InventoryHub.FormRow"
+        android:contentDescription="@string/move_stock">
+
+        <ImageView
+            android:id="@+id/moveStockIcon"
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:layout_marginEnd="@dimen/space_md"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_move_stock" />
+
+        <TextView
+            style="@style/TextAppearance.InventoryHub.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/move_stock" />
+
+        <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+    </LinearLayout>
+
+    <View style="@style/Widget.InventoryHub.FormDivider" />
+
+    <LinearLayout
+        android:id="@+id/adjustStockRow"
+        style="@style/Widget.InventoryHub.FormRow"
+        android:contentDescription="@string/adjust_stock">
+
+        <ImageView
+            android:id="@+id/adjustStockIcon"
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:layout_marginEnd="@dimen/space_md"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_adjust_stock" />
+
+        <TextView
+            style="@style/TextAppearance.InventoryHub.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/adjust_stock" />
+
+        <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+    </LinearLayout>
+</LinearLayout>

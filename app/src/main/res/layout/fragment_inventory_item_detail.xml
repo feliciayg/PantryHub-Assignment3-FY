@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:theme="@style/Theme.InventoryHub">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/detailToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        app:navigationIcon="@drawable/ic_back"
+        app:navigationIconTint="@color/inventory_text_primary"
+        app:title="@string/item_info"
+        app:titleTextColor="@color/inventory_text_primary" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="104dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingEnd="@dimen/space_lg">
+
+        <ImageView
+            android:id="@+id/inventoryImageView"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            android:background="@drawable/bg_inventory_image_placeholder"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_leaf" />
+
+        <TextView
+            android:id="@+id/nameTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body"
+            android:textStyle="bold"
+            tools:text="fish" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_sm"
+        android:background="@color/inventory_background" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/detailTabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/inventory_surface"
+        app:tabIndicatorColor="@color/inventory_primary"
+        app:tabSelectedTextColor="@color/inventory_primary"
+        app:tabTextColor="@color/inventory_text_secondary" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ScrollView
+            android:id="@+id/detailsScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/detailsRowsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="@dimen/space_md" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/space_sm"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:background="@color/inventory_background" />
+
+                <LinearLayout
+                    android:id="@+id/expirySummarySection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/item_form_horizontal_padding"
+                        android:paddingEnd="@dimen/item_form_horizontal_padding">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/expiry_summary"
+                            android:textColor="@color/inventory_text_primary"
+                            android:textSize="@dimen/text_size_body"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/expirySummaryEmptyTextView"
+                        style="@style/TextAppearance.InventoryHub.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="@dimen/item_form_horizontal_padding"
+                        android:paddingEnd="@dimen/item_form_horizontal_padding"
+                        android:paddingBottom="@dimen/space_md"
+                        android:text="@string/no_expiry_tracked"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/expirySummaryRowsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:id="@+id/inventoryContentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_lg"
+            android:paddingTop="@dimen/space_md"
+            android:paddingEnd="@dimen/space_lg"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/locationSearchEditText"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_search_field"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawablePadding="@dimen/space_sm"
+                    android:hint="@string/search_locations"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:textColor="@color/inventory_text_primary"
+                    android:textColorHint="@color/inventory_text_secondary"
+                    android:textSize="@dimen/text_size_caption" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/inStockChip"
+                    style="@style/Widget.InventoryHub.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:checkable="true"
+                    android:text="@string/in_stock" />
+            </LinearLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/locationRowsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="@dimen/space_sm" />
+
+                    <TextView
+                        android:id="@+id/noLocationStockTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="@dimen/space_lg"
+                        android:text="@string/no_location_stock_found"
+                        android:textColor="@color/inventory_text_secondary"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </ScrollView>
+        </LinearLayout>
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/space_sm"
+        android:background="@color/inventory_background" />
+
+    <LinearLayout
+        android:id="@+id/bottomActionLayout"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:background="@color/inventory_surface"
+        android:elevation="12dp"
+        android:translationZ="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_lg"
+        android:paddingEnd="@dimen/space_lg">
+
+        <LinearLayout
+            android:id="@+id/allLocationsSummaryRow"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/summaryLocationLabelTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/all_locations"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="@dimen/text_size_body" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/allLocationsQuantityTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/inventory_primary"
+                    android:textSize="@dimen/text_size_metric_extra_large"
+                    android:textStyle="bold"
+                    tools:text="110" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="@dimen/space_xs"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/inventory_text_secondary" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/transactButton"
+            android:layout_width="148dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="@dimen/space_sm"
+            android:text="@string/transact" />
+    </LinearLayout>
+</LinearLayout>

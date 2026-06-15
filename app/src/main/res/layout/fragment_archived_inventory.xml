@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:context=".ui.storage.ArchivedInventoryFragment">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        style="@style/Widget.InventoryHub.Toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/app_bar_height"
+        android:background="@color/inventory_surface"
+        app:navigationIcon="@drawable/ic_back"
+        tools:title="Archived Items" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchLayout"
+        style="@style/Widget.InventoryHub.TextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/page_horizontal_padding"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginEnd="@dimen/page_horizontal_padding"
+        android:hint="@string/search_items_identifiers"
+        app:startIconDrawable="@drawable/ic_search">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:minHeight="@dimen/form_field_height"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/page_horizontal_padding"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginEnd="@dimen/page_horizontal_padding"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/locationSelector"
+            style="@style/Widget.InventoryHub.Chip.Assist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxWidth="150dp"
+            android:singleLine="true"
+            android:textColor="@color/inventory_text_primary"
+            android:textStyle="bold"
+            app:chipIcon="@drawable/ic_chevron_down"
+            app:chipIconTint="@color/inventory_text_secondary"
+            app:chipIconVisible="true"
+            tools:text="All Locations" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/groupButton"
+            style="@style/Widget.InventoryHub.Chip.Assist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:text="@string/group_by"
+            android:textStyle="bold"
+            app:chipIcon="@drawable/ic_chevron_down"
+            app:chipIconTint="@color/inventory_text_secondary"
+            app:chipIconVisible="true" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/sortButton"
+            android:layout_width="@dimen/items_control_height"
+            android:layout_height="@dimen/items_control_height"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/sort_items"
+            android:src="@drawable/ic_sort"
+            app:tint="@color/inventory_text_secondary" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/itemsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/page_horizontal_padding"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingEnd="@dimen/page_horizontal_padding"
+            android:paddingBottom="@dimen/page_bottom_padding"
+            tools:listitem="@layout/item_inventory_item" />
+
+        <TextView
+            android:id="@+id/emptyTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/empty_archived_items"
+            android:textColor="@color/inventory_text_secondary"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

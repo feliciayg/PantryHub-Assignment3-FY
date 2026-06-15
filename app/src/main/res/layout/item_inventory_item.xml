@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/groupHeaderTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/space_xs"
+        android:paddingTop="@dimen/space_md"
+        android:paddingEnd="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_sm"
+        android:textColor="@color/inventory_text_primary"
+        android:textSize="@dimen/text_size_body"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="Beverages (4)"
+        tools:visibility="visible" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/items_row_min_height">
+
+        <LinearLayout
+            android:id="@+id/swipeActionContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:orientation="horizontal"
+            android:visibility="invisible">
+
+            <LinearLayout android:id="@+id/editAction" android:layout_width="@dimen/inventory_swipe_action_width" android:layout_height="match_parent" android:background="@color/swipe_edit" android:clickable="true" android:focusable="true" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="@dimen/inventory_swipe_action_icon_size" android:layout_height="@dimen/inventory_swipe_action_icon_size" android:contentDescription="@string/edit" android:src="@drawable/ic_edit" app:tint="@color/white" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xs" android:text="@string/edit" android:textColor="@color/white" android:textSize="@dimen/text_size_small" android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/deleteAction" android:layout_width="@dimen/inventory_swipe_action_width" android:layout_height="match_parent" android:background="@drawable/bg_swipe_delete_action" android:clickable="true" android:focusable="true" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="@dimen/inventory_swipe_action_icon_size" android:layout_height="@dimen/inventory_swipe_action_icon_size" android:contentDescription="@string/archive" android:src="@drawable/ic_archive" app:tint="@color/white" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xs" android:text="@string/archive" android:textColor="@color/white" android:textSize="@dimen/text_size_small" android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/inventoryItemCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/items_row_min_height"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingBottom="@dimen/space_sm">
+
+            <ImageView
+                android:id="@+id/inventoryImageView"
+                android:layout_width="@dimen/items_row_image_size"
+                android:layout_height="@dimen/items_row_image_size"
+                android:background="@drawable/bg_inventory_image_placeholder"
+                android:contentDescription="@string/item_image"
+                android:padding="@dimen/space_sm"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_leaf" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_md"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="@dimen/space_sm">
+
+                <TextView
+                    android:id="@+id/nameTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/inventory_text_primary"
+                    android:textSize="@dimen/text_size_body"
+                    android:textStyle="bold"
+                    tools:text="Coca-Cola 500ml" />
+
+                <TextView
+                    android:id="@+id/supportingTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/inventory_text_secondary"
+                    android:textSize="@dimen/text_size_caption"
+                    tools:text="Beverages | Coca-Cola | Safety stock: 20" />
+
+                <TextView
+                    android:id="@+id/archivedBadgeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:background="@drawable/bg_group_percentage_badge"
+                    android:paddingStart="@dimen/space_sm"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="@dimen/space_sm"
+                    android:paddingBottom="2dp"
+                    android:text="@string/archived"
+                    android:textColor="@color/inventory_text_secondary"
+                    android:textSize="@dimen/text_size_small"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/expiryTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/inventory_warning"
+                    android:textSize="@dimen/text_size_caption"
+                    android:visibility="gone"
+                    tools:text="Expires 17 Jun 2026 (13)"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/quantityTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/inventory_primary"
+                    android:textSize="@dimen/text_size_title"
+                    android:textStyle="bold"
+                    tools:text="30" />
+
+                <TextView
+                    android:id="@+id/unitTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:textColor="@color/inventory_text_secondary"
+                    android:textSize="@dimen/text_size_caption"
+                    tools:text="pack" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+</LinearLayout>

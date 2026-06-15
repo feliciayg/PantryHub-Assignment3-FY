@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/space_md">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        android:orientation="horizontal">
+
+        <!-- Item Image -->
+        <ImageView
+            android:id="@+id/itemImageView"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:background="@drawable/bg_inventory_image_placeholder"
+            android:contentDescription="@string/item_image"
+            android:padding="20dp"
+            android:scaleType="centerInside"
+            tools:src="@drawable/ic_leaf" />
+
+        <!-- Item Information -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/itemNameTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/inventory_text_primary"
+                android:textSize="@dimen/text_size_body"
+                android:textStyle="bold"
+                tools:text="fish" />
+
+            <TextView
+                android:id="@+id/identifierTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="@dimen/text_size_caption"
+                tools:text="SKU: FIS-FIS-0001" />
+
+            <TextView
+                android:id="@+id/secondaryTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="14sp"
+                tools:text="Expires: 17 June 2026" />
+
+        </LinearLayout>
+
+        <!-- Quantity Change Section -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/quantityHighlightTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/transaction_stock_in_blue"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                tools:text="+5" />
+
+            <TextView
+                android:id="@+id/balanceSummaryTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="end"
+                android:textAlignment="viewEnd"
+                android:textColor="@color/inventory_text_secondary"
+                android:textSize="12sp"
+                tools:text="0 pack → 5 pack" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/space_md"
+        android:background="@color/inventory_outline" />
+
+</LinearLayout>

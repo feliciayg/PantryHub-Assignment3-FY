@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="68dp"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/page_horizontal_padding"
+    android:paddingTop="@dimen/space_md"
+    android:paddingEnd="@dimen/page_horizontal_padding"
+    android:paddingBottom="@dimen/space_md">
+
+    <ImageView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@string/location"
+        android:src="@drawable/ic_store"
+        android:tint="@color/inventory_text_primary" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingEnd="@dimen/space_md">
+
+        <TextView
+            android:id="@+id/nameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            tools:text="Main Warehouse" />
+
+        <TextView
+            android:id="@+id/memoTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/inventory_text_secondary"
+            android:textSize="14sp"
+            tools:text="Front store location" />
+
+        <TextView
+            android:id="@+id/archivedBadgeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:background="@drawable/bg_group_percentage_badge"
+            android:paddingStart="@dimen/space_sm"
+            android:paddingTop="2dp"
+            android:paddingEnd="@dimen/space_sm"
+            android:paddingBottom="2dp"
+            android:text="@string/archived"
+            android:textColor="@color/inventory_text_secondary"
+            android:textSize="@dimen/text_size_small"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:contentDescription="@string/view_details"
+        android:src="@drawable/ic_chevron_right"
+        android:tint="@color/inventory_text_secondary" />
+</LinearLayout>

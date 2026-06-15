@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_surface"
+    android:orientation="vertical"
+    tools:theme="@style/Theme.InventoryHub">
+
+    <include
+        android:id="@+id/formHeader"
+        layout="@layout/include_inventoryhub_form_header" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/inventory_outline" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_lg">
+
+            <FrameLayout
+                android:id="@+id/imagePickerContainer"
+                android:layout_width="@dimen/item_form_image_size"
+                android:layout_height="@dimen/item_form_image_size"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_lg"
+                android:background="@drawable/bg_inventory_image_placeholder"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:id="@+id/itemImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/item_image"
+                    android:scaleType="centerCrop" />
+
+                <FrameLayout
+                    android:layout_width="@dimen/item_form_camera_size"
+                    android:layout_height="@dimen/item_form_camera_size"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="-2dp"
+                    android:layout_marginBottom="-2dp"
+                    android:background="@drawable/bg_camera_overlay_circle">
+
+                    <ImageView
+                        android:layout_width="@dimen/home_status_icon_size"
+                        android:layout_height="@dimen/home_status_icon_size"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/add_item_photo"
+                        android:src="@drawable/ic_camera"
+                        app:tint="@color/inventory_on_primary" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/basicSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xl"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/skuRow"
+                    style="@style/Widget.InventoryHub.FormRow"
+                    android:contentDescription="@string/sku">
+
+                    <LinearLayout
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Widget.InventoryHub.FormRowLabel"
+                            android:layout_width="wrap_content"
+                            android:text="@string/sku" />
+
+                        <ImageButton
+                            android:id="@+id/skuInfoButton"
+                            android:layout_width="@dimen/item_form_info_size"
+                            android:layout_height="@dimen/item_form_info_size"
+                            android:layout_marginStart="@dimen/space_xs"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/sku_info"
+                            android:src="@drawable/ic_info"
+                            app:tint="@color/inventory_text_secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/skuValueTextView"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:hint="@string/auto_generate" />
+
+                    <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/Widget.InventoryHub.FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/nameRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/name" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/nameEditText"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:background="@null"
+                        android:ellipsize="end"
+                        android:hint="@string/enter_item_name"
+                        android:inputType="textCapSentences"
+                        android:maxLines="1"
+                        android:padding="0dp"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <View style="@style/Widget.InventoryHub.FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/barcodeRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/barcode" />
+
+                    <TextView
+                        android:id="@+id/barcodeValueTextView"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:hint="@string/scan_or_enter_manually" />
+
+                    <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <include layout="@layout/include_inventoryhub_section_band" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include
+                    android:id="@+id/attributesSectionHeader"
+                    layout="@layout/include_inventoryhub_form_section_header" />
+
+                <LinearLayout
+                    android:id="@+id/categoryRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/category" />
+
+                    <TextView
+                        android:id="@+id/categoryValueTextView"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:hint="@string/enter_a_value" />
+
+                    <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/Widget.InventoryHub.FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/brandRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/brand" />
+
+                    <TextView
+                        android:id="@+id/brandValueTextView"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:hint="@string/enter_a_value" />
+
+                    <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/Widget.InventoryHub.FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/safetyStockRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/safety_stock" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/safetyStockInputEditText"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:background="@null"
+                        android:ellipsize="end"
+                        android:hint="@string/safety_stock_hint"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:padding="0dp"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <View style="@style/Widget.InventoryHub.FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/expiryDateRow"
+                    style="@style/Widget.InventoryHub.FormRow">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowLabel"
+                        android:layout_width="@dimen/item_form_label_width"
+                        android:text="@string/expiry_date" />
+
+                    <TextView
+                        android:id="@+id/expiryDateValueTextView"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:hint="@string/select_a_date" />
+
+                    <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <include layout="@layout/include_inventoryhub_section_band" />
+
+            <include
+                android:id="@+id/pricingSectionHeader"
+                layout="@layout/include_inventoryhub_form_section_header" />
+
+            <LinearLayout
+                android:id="@+id/costRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/cost" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:text="@string/currency_rm"
+                        android:textColor="@color/inventory_text_primary" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/costInputEditText"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:background="@null"
+                        android:ellipsize="end"
+                        android:hint="@string/zero"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1"
+                        android:padding="0dp"
+                        android:singleLine="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+
+            <LinearLayout
+                android:id="@+id/priceRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/price" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:text="@string/currency_rm"
+                        android:textColor="@color/inventory_text_primary" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/priceInputEditText"
+                        style="@style/Widget.InventoryHub.FormRowValue"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:background="@null"
+                        android:ellipsize="end"
+                        android:hint="@string/zero"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1"
+                        android:padding="0dp"
+                        android:singleLine="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <include layout="@layout/include_inventoryhub_section_band" />
+
+            <include
+                android:id="@+id/startingQuantitySectionHeader"
+                layout="@layout/include_inventoryhub_form_section_header" />
+
+            <LinearLayout
+                android:id="@+id/locationRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/location" />
+
+                <TextView
+                    android:id="@+id/locationValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    android:hint="@string/select_a_location" />
+
+                <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+
+            <LinearLayout
+                android:id="@+id/quantityRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/quantity" />
+
+                <TextView
+                    android:id="@+id/quantityValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    android:hint="@string/quantity_hint" />
+
+                <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+            </LinearLayout>
+
+            <View style="@style/Widget.InventoryHub.FormDivider" />
+
+            <LinearLayout
+                android:id="@+id/unitRow"
+                style="@style/Widget.InventoryHub.FormRow">
+
+                <TextView
+                    style="@style/Widget.InventoryHub.FormRowLabel"
+                    android:layout_width="@dimen/item_form_label_width"
+                    android:text="@string/unit" />
+
+                <TextView
+                    android:id="@+id/unitValueTextView"
+                    style="@style/Widget.InventoryHub.FormRowValue"
+                    android:hint="@string/pcs" />
+
+                <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveButton"
+                style="@style/Widget.InventoryHub.Button"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginStart="@dimen/item_form_horizontal_padding"
+                android:layout_marginTop="@dimen/space_lg"
+                android:layout_marginEnd="@dimen/item_form_horizontal_padding"
+                android:text="@string/save" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="@string/cancel"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/legacyInputContainer"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:importantForAccessibility="noHideDescendants"
+                android:orientation="vertical"
+                android:visibility="invisible">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/branchLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/branchEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/skuLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/skuEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/barcodeLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/barcodeEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/categoryLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/categoryEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/brandLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/brandEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/quantityLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/quantityEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/reorderPointLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/reorderPointEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/expiryDateLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/expiryDateEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/costPriceLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/costPriceEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/sellingPriceLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/sellingPriceEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

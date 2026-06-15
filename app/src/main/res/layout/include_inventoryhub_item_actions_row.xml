@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/item_form_row_height"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/item_form_horizontal_padding"
+    android:paddingEnd="@dimen/item_form_horizontal_padding">
+
+    <LinearLayout
+        android:id="@+id/addItemRow"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:src="@drawable/ic_add"
+            app:tint="@color/inventory_text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:text="@string/add_item"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="32dp"
+        android:background="@color/inventory_outline" />
+
+    <LinearLayout
+        android:id="@+id/scanBarcodeRow"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="@dimen/home_action_icon_size"
+            android:layout_height="@dimen/home_action_icon_size"
+            android:src="@drawable/ic_barcode_scan"
+            app:tint="@color/inventory_text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:text="@string/scan_barcode"
+            android:textColor="@color/inventory_text_primary"
+            android:textSize="@dimen/text_size_body" />
+    </LinearLayout>
+</LinearLayout>

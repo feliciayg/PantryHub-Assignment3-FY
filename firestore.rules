@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isCurrentUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isStaff(storeId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/stores/$(storeId)/staff/$(request.auth.uid));
+    }
+
+    function isOwner(storeId) {
+      return isStaff(storeId)
+        && get(/databases/$(database)/documents/stores/$(storeId)/staff/$(request.auth.uid)).data.role == "owner";
+    }
+
+    function updatesOnlyPurchaseOrderCounter() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["purchaseOrderCounter"])
+        && request.resource.data.purchaseOrderCounter is int
+        && (!("purchaseOrderCounter" in resource.data)
+          || request.resource.data.purchaseOrderCounter >= resource.data.purchaseOrderCounter);
+    }
+
+    match /users/{uid} {
+      allow create: if isCurrentUser(uid)
+        && request.resource.data.uid == uid;
+      allow read: if isCurrentUser(uid);
+      allow update: if isCurrentUser(uid)
+        && request.resource.data.uid == uid;
+      allow delete: if false;
+    }
+
+    match /inviteCodes/{code} {
+      // Store creation reserves one invite code document per store so codes stay globally unique.
+      allow create: if signedIn()
+        && request.resource.data.code == code
+        && request.resource.data.storeId is string
+        && request.resource.data.createdBy == request.auth.uid;
+      allow read: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /stores/{storeId} {
+      allow create: if signedIn()
+        && request.resource.data.id == storeId
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // Signed-in users need to query a store by inviteCode before becoming staff.
+      allow get, list: if signedIn();
+      allow update: if isOwner(storeId)
+        || (isStaff(storeId) && updatesOnlyPurchaseOrderCounter());
+      allow delete: if isOwner(storeId);
+
+      match /staff/{uid} {
+        allow read: if isStaff(storeId);
+        allow create: if isCurrentUser(uid)
+          && request.resource.data.uid == uid
+          && request.resource.data.role in ["owner", "staff"];
+        allow update: if isOwner(storeId)
+          || (isCurrentUser(uid)
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.role == resource.data.role);
+        allow delete: if isOwner(storeId);
+      }
+
+      match /inventoryItems/{itemId} {
+        allow read, write: if isStaff(storeId);
+
+        match /expiryLots/{lotId} {
+          allow read, write: if isStaff(storeId);
+        }
+      }
+
+      match /restockOrders/{orderId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /suppliers/{supplierId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /customers/{customerId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /branches/{branchId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /stockMovements/{movementId} {
+        allow read, create: if isStaff(storeId);
+        allow update, delete: if false;
+      }
+
+      match /activityLogs/{logId} {
+        allow read, create: if isStaff(storeId);
+        allow update, delete: if false;
+      }
+    }
+  }
+}

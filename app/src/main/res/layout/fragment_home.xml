@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inventory_background"
+    tools:theme="@style/Theme.InventoryHub">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/loadingIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/contentScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:paddingBottom="@dimen/page_bottom_padding">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/page_horizontal_padding"
+                android:paddingTop="@dimen/page_top_padding"
+                android:paddingEnd="@dimen/page_horizontal_padding">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/insightsViewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/home_insight_card_height"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/indicatorOne"
+                        android:layout_width="@dimen/home_indicator_dot_size"
+                        android:layout_height="@dimen/home_indicator_dot_size"
+                        android:background="@drawable/bg_home_indicator_selected" />
+
+                    <View
+                        android:id="@+id/indicatorTwo"
+                        android:layout_width="@dimen/home_indicator_dot_size"
+                        android:layout_height="@dimen/home_indicator_dot_size"
+                        android:layout_marginStart="@dimen/space_sm"
+                        android:background="@drawable/bg_home_indicator_unselected" />
+
+                    <View
+                        android:id="@+id/indicatorThree"
+                        android:layout_width="@dimen/home_indicator_dot_size"
+                        android:layout_height="@dimen/home_indicator_dot_size"
+                        android:layout_marginStart="@dimen/space_sm"
+                        android:background="@drawable/bg_home_indicator_unselected" />
+                </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/searchLayout"
+                    style="@style/Widget.InventoryHub.TextInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:hint="@string/search_for_item"
+                    app:endIconDrawable="@drawable/ic_barcode_scan"
+                    app:endIconMode="custom"
+                    app:startIconDrawable="@drawable/ic_search">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/searchEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:minHeight="@dimen/form_field_height"
+                        android:singleLine="true"
+                        tools:text="" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.InventoryHub.HomeCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="@dimen/card_padding" android:paddingBottom="@dimen/space_sm">
+                        <TextView style="@style/TextAppearance.InventoryHub.SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/card_padding" android:paddingEnd="@dimen/card_padding" android:text="@string/items_section" />
+                        <LinearLayout android:id="@+id/itemsActionsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_sm" android:orientation="vertical" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.InventoryHub.HomeCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="@dimen/card_padding" android:paddingBottom="@dimen/space_sm">
+                        <TextView style="@style/TextAppearance.InventoryHub.SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/card_padding" android:paddingEnd="@dimen/card_padding" android:text="@string/transactions" />
+                        <LinearLayout android:id="@+id/transactionsActionsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_sm" android:orientation="vertical" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.InventoryHub.HomeCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="@dimen/card_padding" android:paddingBottom="@dimen/space_sm">
+                        <TextView style="@style/TextAppearance.InventoryHub.SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/card_padding" android:paddingEnd="@dimen/card_padding" android:text="@string/alerts" />
+                        <LinearLayout android:id="@+id/alertsActionsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_sm" android:orientation="vertical" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.InventoryHub.HomeCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="@dimen/card_padding" android:paddingBottom="@dimen/space_sm">
+                        <TextView style="@style/TextAppearance.InventoryHub.SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/card_padding" android:paddingEnd="@dimen/card_padding" android:text="@string/purchases_and_sales" />
+                        <LinearLayout android:id="@+id/purchasesSalesActionsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_sm" android:orientation="vertical" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
