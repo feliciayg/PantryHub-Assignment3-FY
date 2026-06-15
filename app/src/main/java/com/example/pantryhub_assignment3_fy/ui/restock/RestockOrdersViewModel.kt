@@ -193,10 +193,9 @@ class RestockOrdersViewModel(
         val state = _uiState.value ?: return emptyList()
         val draft = state.receiveDraft ?: return emptyList()
         val query = state.receivePickerQuery.trim()
-        val order = state.restockOrders.firstOrNull { it.id == draft.purchaseId } ?: return emptyList()
-        return order.purchaseItems
-            .filter { it.remainingQuantity() > 0.0 }
-            .filter { item ->
+        return receiveRowsForDraft(state, draft)
+            .filter { row ->
+                val item = row.item
                 query.isBlank() ||
                     item.itemName.contains(query, ignoreCase = true) ||
                     item.sku.contains(query, ignoreCase = true) ||
@@ -204,7 +203,22 @@ class RestockOrdersViewModel(
                     item.category.contains(query, ignoreCase = true) ||
                     item.brand.contains(query, ignoreCase = true)
             }
-            .sortedBy { it.itemName.lowercase() }
+            .sortedBy { it.item.itemName.lowercase() }
+    }
+
+    fun selectedReceiveRows(): List<PurchaseReceivePickerRow> =
+        _uiState.value
+            ?.let { state -> state.receiveDraft?.let { draft -> receiveRowsForDraft(state, draft) } }
+            .orEmpty()
+            .filter { it.selectedQuantity > 0.0 }
+
+    private fun receiveRowsForDraft(
+        state: RestockOrdersUiState,
+        draft: PurchaseReceiveDraft
+    ): List<PurchaseReceivePickerRow> {
+        val order = state.restockOrders.firstOrNull { it.id == draft.purchaseId } ?: return emptyList()
+        return order.purchaseItems
+            .filter { it.remainingQuantity() > 0.0 }
             .map { item ->
                 PurchaseReceivePickerRow(
                     item = item,
@@ -214,9 +228,6 @@ class RestockOrdersViewModel(
                 )
             }
     }
-
-    fun selectedReceiveRows(): List<PurchaseReceivePickerRow> =
-        receivePickerItems().filter { it.selectedQuantity > 0.0 }
 
     fun submitPartialReceive() {
         val state = _uiState.value ?: return

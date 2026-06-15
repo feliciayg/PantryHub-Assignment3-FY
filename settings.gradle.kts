@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PantryHub-Assignment3-FY"
+rootProject.name = "InventoryHub-Assignment3-FY"
 include(":app")
  
