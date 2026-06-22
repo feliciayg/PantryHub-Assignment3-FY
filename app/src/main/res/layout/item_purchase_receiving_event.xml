@@ -32,6 +32,13 @@
             android:textColor="@color/inventory_text_primary"
             android:textSize="@dimen/text_size_section"
             android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/receivedItemsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:orientation="vertical" />
     </LinearLayout>
 
     <ImageView

@@ -36,7 +36,7 @@ class PurchaseReceiveItemPickerFragment : Fragment() {
 
         viewModel.uiState.observe(viewLifecycleOwner) {
             binding.toolbar.title = it.receiveDraft?.locationName.orEmpty()
-            binding.summaryTextView.text = it.receiveSelectionSummary()
+            binding.summaryTextView.text = it.receiveSelectionSummary(requireContext())
             render()
         }
     }

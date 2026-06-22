@@ -114,7 +114,11 @@ class HomeViewModel(
         val trackedItems = latestInventoryItems.filterNot { it.status == InventoryStatus.USED.name }
         val actionableItems = trackedItems.filterNot { it.status == InventoryStatus.WASTED.name }
         val totalQuantity = actionableItems.sumOf { it.quantity.coerceAtLeast(0.0) }
-        val activeLowStockCount = actionableItems.count(StockLevelRules::isLowStock)
+        // Keep dashboard health categories mutually exclusive: a zero-stock row belongs to
+        // Out of Stock, while Shortages means stock remains but is at/below its reorder point.
+        val activeLowStockCount = actionableItems.count {
+            it.quantity > 0.0 && StockLevelRules.isLowStock(it)
+        }
         val outOfStockCount = actionableItems.count { it.quantity <= 0.0 }
         val expiredItemCount = actionableItems.count { it.status == InventoryStatus.EXPIRED.name }
         val todayStart = DateUtils.todayMillis()

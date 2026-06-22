@@ -3,13 +3,14 @@ package com.example.pantryhub_assignment3_fy.ui.storage
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -22,10 +23,14 @@ import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.data.repository.BranchRepository
 import com.example.pantryhub_assignment3_fy.databinding.DialogEnterSkuBinding
 import com.example.pantryhub_assignment3_fy.databinding.FragmentCategoryPickerBinding
-import com.example.pantryhub_assignment3_fy.databinding.ItemCategoryOptionBinding
+import com.example.pantryhub_assignment3_fy.databinding.ItemInventoryOptionSwipeBinding
 import com.example.pantryhub_assignment3_fy.model.Branch
+import com.example.pantryhub_assignment3_fy.model.InventoryOption
+import com.example.pantryhub_assignment3_fy.model.InventoryOptionType
+import com.example.pantryhub_assignment3_fy.model.PartnerType
 import com.example.pantryhub_assignment3_fy.ui.restock.PurchaseEditorViewModel
 import com.example.pantryhub_assignment3_fy.ui.movement.StockInTransactionViewModel
+import com.example.pantryhub_assignment3_fy.ui.supplier.AddEditSupplierFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -34,16 +39,17 @@ class CategoryPickerFragment : Fragment() {
     private var _binding: FragmentCategoryPickerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: InventoryViewModel by activityViewModels()
+    private val optionViewModel: InventoryOptionViewModel by activityViewModels()
     private val stockInViewModel: StockInTransactionViewModel by activityViewModels()
     private val purchaseViewModel: PurchaseEditorViewModel by activityViewModels()
     private val branchRepository = BranchRepository()
     private lateinit var adapter: CategoryPickerAdapter
     private var fieldType: String = FIELD_CATEGORY
     private var currentValue: String = ""
-    private var currentBranchId: String = ""
     private var pendingValues: List<String> = emptyList()
     private var parentCategory: String = ""
     private var pendingCreatedValue: String = ""
+    private var managedOptions: List<InventoryOption> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCategoryPickerBinding.inflate(inflater, container, false)
@@ -53,15 +59,18 @@ class CategoryPickerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         fieldType = arguments?.getString(ARG_FIELD_TYPE).orEmpty().ifBlank { FIELD_CATEGORY }
         currentValue = arguments?.getString(ARG_CURRENT_CATEGORY).orEmpty().trim()
-        currentBranchId = arguments?.getString(ARG_CURRENT_BRANCH_ID).orEmpty()
         pendingValues = arguments?.getStringArray(ARG_PENDING_CATEGORIES)?.toList().orEmpty()
         parentCategory = arguments?.getString(ARG_PARENT_CATEGORY).orEmpty()
-        adapter = CategoryPickerAdapter { option ->
-            when (option.kind) {
-                CategoryOptionKind.EXISTING -> returnSelection(option.label, option.id)
-                CategoryOptionKind.ADD_NEW -> returnSelection(option.label)
-            }
-        }
+        adapter = CategoryPickerAdapter(
+            onCategorySelected = { option ->
+                when (option.kind) {
+                    CategoryOptionKind.EXISTING -> returnSelection(option.label, option.id)
+                    CategoryOptionKind.ADD_NEW -> showAddValueDialog(option.label)
+                }
+            },
+            onEdit = ::showEditOptionDialog,
+            onDelete = ::requestDeleteOption
+        )
 
         binding.categoryRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.categoryRecyclerView.adapter = adapter
@@ -76,8 +85,19 @@ class CategoryPickerFragment : Fragment() {
             }
         )
         binding.addButton.setOnClickListener {
-            if (fieldType == FIELD_STOCK_IN_PARTNER) {
-                findNavController().navigate(R.id.action_categoryPickerFragment_to_addEditSupplierFragment)
+            if (fieldType == FIELD_STOCK_IN_PARTNER || fieldType == FIELD_STOCK_OUT_CUSTOMER) {
+                val partnerType = if (fieldType == FIELD_STOCK_OUT_CUSTOMER) {
+                    PartnerType.CUSTOMER
+                } else {
+                    PartnerType.SUPPLIER
+                }
+                // Reuse the complete partner form so customer contact details are not lost.
+                findNavController().navigate(
+                    R.id.action_categoryPickerFragment_to_addEditSupplierFragment,
+                    Bundle().apply {
+                        putString(AddEditSupplierFragment.ARG_PARTNER_TYPE, partnerType.value)
+                    }
+                )
             } else {
                 showAddValueDialog(binding.searchEditText.text?.toString().orEmpty().trim())
             }
@@ -90,20 +110,25 @@ class CategoryPickerFragment : Fragment() {
                 else -> R.string.search_or_enter_value
             }
         )
-        val initialSearchText = if (
-            fieldType == FIELD_LOCATION ||
-            fieldType == FIELD_STOCK_IN_LOCATION ||
-            fieldType == FIELD_MOVE_STOCK_FROM ||
-            fieldType == FIELD_MOVE_STOCK_TO ||
-            fieldType == FIELD_STOCK_IN_PARTNER ||
-            fieldType == FIELD_STOCK_OUT_CUSTOMER
-        ) "" else currentValue
+        val initialSearchText = if (usesEmptyInitialSearch()) "" else currentValue
         binding.searchEditText.setText(initialSearchText)
         binding.searchEditText.setSelection(binding.searchEditText.text?.length ?: 0)
         binding.searchEditText.doAfterTextChanged { refreshOptions() }
 
         viewModel.uiState.observe(viewLifecycleOwner) {
             refreshOptions()
+        }
+        optionViewModel.uiState.observe(viewLifecycleOwner) { state ->
+            managedOptions = when (masterOptionType()) {
+                InventoryOptionType.CATEGORY -> state.categories
+                InventoryOptionType.BRAND -> state.brands
+                null -> emptyList()
+            }
+            refreshOptions()
+            state.errorMessage?.let {
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+                optionViewModel.clearError()
+            }
         }
         stockInViewModel.uiState.observe(viewLifecycleOwner) { state ->
             refreshOptions()
@@ -128,6 +153,7 @@ class CategoryPickerFragment : Fragment() {
         purchaseViewModel.uiState.observe(viewLifecycleOwner) {
             refreshOptions()
         }
+        masterOptionType()?.let(optionViewModel::loadOptions)
         refreshOptions()
 
         binding.searchEditText.requestFocus()
@@ -139,25 +165,19 @@ class CategoryPickerFragment : Fragment() {
 
     private fun refreshOptions() {
         val query = binding.searchEditText.text?.toString().orEmpty().trim()
-        val filtered = pickerOptions()
+        val allOptions = pickerOptions()
+        val filtered = allOptions
             .filter { option ->
                 query.isBlank() ||
                     option.label.contains(query, ignoreCase = true) ||
                     option.secondary.contains(query, ignoreCase = true)
             }
-            .map { option ->
-                CategoryPickerOption(
-                    label = option.label,
-                    kind = CategoryOptionKind.EXISTING,
-                    id = option.id,
-                    secondary = option.secondary
-                )
-            }
+            .map { option -> option.copy(kind = CategoryOptionKind.EXISTING) }
             .toMutableList()
 
         val canAddInline = supportsInlineValueSelection() &&
             query.isNotBlank() &&
-            pickerOptions().none { it.label.equals(query, ignoreCase = true) }
+            allOptions.none { it.label.equals(query, ignoreCase = true) }
         if (canAddInline) {
             filtered.add(0, CategoryPickerOption(label = query, kind = CategoryOptionKind.ADD_NEW))
         }
@@ -174,10 +194,43 @@ class CategoryPickerFragment : Fragment() {
     }
 
     private fun pickerOptions(): List<CategoryPickerOption> {
-        if (fieldType == FIELD_STOCK_IN_LOCATION || fieldType == FIELD_MOVE_STOCK_FROM || fieldType == FIELD_MOVE_STOCK_TO) {
+        masterOptionType()?.let { type ->
+            val preferredBrandOrder = if (type == InventoryOptionType.BRAND) {
+                viewModel.brandSuggestionsForCategory(parentCategory)
+            } else {
+                emptyList()
+            }
+            val ordered = managedOptions.sortedWith(
+                compareBy<InventoryOption> {
+                    val index = preferredBrandOrder.indexOfFirst { preferred ->
+                        preferred.equals(it.name, ignoreCase = true)
+                    }
+                    if (index == -1) Int.MAX_VALUE else index
+                }.thenBy { it.name.lowercase() }
+            )
+            val persistedNames = ordered.map { it.name }
+            val unsavedCompatibilityValues = (pendingValues + currentValue)
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .filter { candidate -> persistedNames.none { it.equals(candidate, ignoreCase = true) } }
+                .distinctBy { it.lowercase() }
+            return ordered.map { option ->
+                CategoryPickerOption(
+                    label = option.name,
+                    id = option.id,
+                    masterOption = option
+                )
+            } + unsavedCompatibilityValues.map { label ->
+                CategoryPickerOption(label = label)
+            }
+        }
+        if (isTransactionLocationField()) {
             val state = stockInViewModel.uiState.value
+            val itemCountsByBranch = state?.inventoryItems.orEmpty()
+                .groupingBy { it.branchId }
+                .eachCount()
             return state?.branches.orEmpty().map { branch ->
-                val count = state?.inventoryItems.orEmpty().count { it.branchId == branch.id }
+                val count = itemCountsByBranch[branch.id] ?: 0
                 CategoryPickerOption(
                     label = branch.name,
                     id = branch.id,
@@ -189,7 +242,9 @@ class CategoryPickerFragment : Fragment() {
             val suppliers = purchaseViewModel.uiState.value?.suppliers
                 ?.takeIf { it.isNotEmpty() }
                 ?: stockInViewModel.uiState.value?.suppliers.orEmpty()
-            return suppliers.map { supplier ->
+            return suppliers
+                .filter { PartnerType.fromValue(it.partnerType) == PartnerType.SUPPLIER }
+                .map { supplier ->
                 CategoryPickerOption(
                     label = supplier.name,
                     id = supplier.id,
@@ -297,8 +352,25 @@ class CategoryPickerFragment : Fragment() {
                         }
                     }
                     else -> {
-                        returnSelection(candidate, addedValue = candidate)
-                        dialog.dismiss()
+                        val type = masterOptionType()
+                        if (type == null) {
+                            returnSelection(candidate, addedValue = candidate)
+                            dialog.dismiss()
+                        } else {
+                            positiveButton.isEnabled = false
+                            optionViewModel.addOption(type, candidate) { result ->
+                                positiveButton.isEnabled = true
+                                result
+                                    .onSuccess { option ->
+                                        returnSelection(option.name, option.id, option.name)
+                                        dialog.dismiss()
+                                    }
+                                    .onFailure {
+                                        dialogBinding.skuInputLayout.error =
+                                            it.message ?: getString(R.string.inventory_option_save_failed)
+                                    }
+                            }
+                        }
                     }
                 }
             }
@@ -312,10 +384,194 @@ class CategoryPickerFragment : Fragment() {
         dialog.show()
     }
 
-    private fun supportsInlineValueSelection(): Boolean =
-        fieldType != FIELD_LOCATION && fieldType != FIELD_STOCK_IN_LOCATION &&
-            fieldType != FIELD_MOVE_STOCK_FROM && fieldType != FIELD_MOVE_STOCK_TO &&
-            fieldType != FIELD_STOCK_IN_PARTNER && fieldType != FIELD_STOCK_OUT_CUSTOMER
+    private fun supportsInlineValueSelection(): Boolean = masterOptionType() != null
+
+    private fun usesEmptyInitialSearch(): Boolean =
+        fieldType == FIELD_LOCATION ||
+            isTransactionLocationField() ||
+            fieldType == FIELD_STOCK_IN_PARTNER ||
+            fieldType == FIELD_STOCK_OUT_CUSTOMER
+
+    private fun isTransactionLocationField(): Boolean =
+        fieldType == FIELD_STOCK_IN_LOCATION ||
+            fieldType == FIELD_MOVE_STOCK_FROM ||
+            fieldType == FIELD_MOVE_STOCK_TO
+
+    private fun masterOptionType(): InventoryOptionType? = when (fieldType) {
+        FIELD_CATEGORY -> InventoryOptionType.CATEGORY
+        FIELD_BRAND -> InventoryOptionType.BRAND
+        else -> null
+    }
+
+    private fun showEditOptionDialog(option: CategoryPickerOption) {
+        val masterOption = option.masterOption ?: return
+        val type = masterOptionType() ?: return
+        optionViewModel.usageCount(type, masterOption.name) { countResult ->
+            countResult
+                .onSuccess { usageCount -> showRenameDialog(type, masterOption, usageCount) }
+                .onFailure { Snackbar.make(binding.root, it.message.orEmpty(), Snackbar.LENGTH_LONG).show() }
+        }
+    }
+
+    private fun showRenameDialog(
+        type: InventoryOptionType,
+        option: InventoryOption,
+        usageCount: Int
+    ) {
+        val dialogBinding = DialogEnterSkuBinding.inflate(layoutInflater)
+        dialogBinding.skuInputLayout.hint = getString(fieldLabelRes())
+        dialogBinding.skuInputEditText.setText(option.name)
+        dialogBinding.skuInputEditText.setSelection(option.name.length)
+        dialogBinding.skuInputHelperTextView.text = if (usageCount > 0) {
+            resources.getQuantityString(
+                R.plurals.rename_inventory_option_usage,
+                usageCount,
+                usageCount
+            )
+        } else {
+            getString(R.string.rename_inventory_option_unused)
+        }
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.rename_inventory_option, option.name))
+            .setView(dialogBinding.root)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.rename, null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val newName = dialogBinding.skuInputEditText.text?.toString().orEmpty().trim()
+                dialogBinding.skuInputLayout.error = null
+                if (newName.isBlank()) {
+                    dialogBinding.skuInputLayout.error = getString(fieldRequiredErrorRes())
+                    return@setOnClickListener
+                }
+                val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                button.isEnabled = false
+                optionViewModel.renameOption(type, option, newName) { result ->
+                    button.isEnabled = true
+                    result
+                        .onSuccess {
+                            if (currentValue.equals(option.name, ignoreCase = true)) {
+                                returnSelection(newName, option.id)
+                            }
+                            dialog.dismiss()
+                            Snackbar.make(binding.root, R.string.inventory_option_renamed, Snackbar.LENGTH_SHORT).show()
+                        }
+                        .onFailure {
+                            dialogBinding.skuInputLayout.error =
+                                it.message ?: getString(R.string.inventory_option_save_failed)
+                        }
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun requestDeleteOption(option: CategoryPickerOption) {
+        val masterOption = option.masterOption ?: return
+        val type = masterOptionType() ?: return
+        optionViewModel.usageCount(type, masterOption.name) { countResult ->
+            countResult
+                .onSuccess { usageCount ->
+                    if (usageCount == 0) showUnusedDeleteConfirmation(type, masterOption)
+                    else showReplacementDeleteDialog(type, masterOption, usageCount)
+                }
+                .onFailure { Snackbar.make(binding.root, it.message.orEmpty(), Snackbar.LENGTH_LONG).show() }
+        }
+    }
+
+    private fun showUnusedDeleteConfirmation(
+        type: InventoryOptionType,
+        option: InventoryOption
+    ) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.delete_inventory_option, option.name))
+            .setMessage(R.string.delete_unused_inventory_option_message)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                deleteOption(type, option, replacementName = null)
+            }
+            .show()
+    }
+
+    private fun showReplacementDeleteDialog(
+        type: InventoryOptionType,
+        option: InventoryOption,
+        usageCount: Int
+    ) {
+        val replacements = managedOptions
+            .filterNot { it.id == option.id }
+            .map { it.name }
+            .toMutableList()
+        if (type == InventoryOptionType.CATEGORY &&
+            !option.name.equals(OTHER_CATEGORY_VALUE, ignoreCase = true) &&
+            replacements.none { it.equals(OTHER_CATEGORY_VALUE, ignoreCase = true) }
+        ) {
+            replacements += OTHER_CATEGORY_VALUE
+        }
+        if (type == InventoryOptionType.BRAND) {
+            replacements.add(0, NO_BRAND_VALUE)
+        }
+        if (replacements.isEmpty()) {
+            Snackbar.make(binding.root, R.string.create_replacement_before_delete, Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        var selectedIndex = 0
+        val labels = replacements.map {
+            if (type == InventoryOptionType.BRAND && it == NO_BRAND_VALUE) {
+                getString(R.string.no_brand)
+            } else if (type == InventoryOptionType.CATEGORY &&
+                it.equals(OTHER_CATEGORY_VALUE, ignoreCase = true)
+            ) {
+                getString(R.string.other)
+            } else {
+                it
+            }
+        }.toTypedArray()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.delete_inventory_option, option.name))
+            .setMessage(
+                resources.getQuantityString(
+                    R.plurals.replace_inventory_option_usage,
+                    usageCount,
+                    usageCount
+                )
+            )
+            .setSingleChoiceItems(labels, selectedIndex) { _, which -> selectedIndex = which }
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.replace_and_delete) { _, _ ->
+                deleteOption(type, option, replacements[selectedIndex])
+            }
+            .show()
+    }
+
+    private fun deleteOption(
+        type: InventoryOptionType,
+        option: InventoryOption,
+        replacementName: String?
+    ) {
+        optionViewModel.deleteOption(type, option, replacementName) { result ->
+            result
+                .onSuccess {
+                    if (currentValue.equals(option.name, ignoreCase = true)) {
+                        returnSelection(
+                            selectedValue = replacementName.orEmpty(),
+                            clearSelection = replacementName.isNullOrBlank()
+                        )
+                    } else {
+                        Snackbar.make(binding.root, R.string.inventory_option_deleted, Snackbar.LENGTH_SHORT).show()
+                    }
+                }
+                .onFailure {
+                    Snackbar.make(
+                        binding.root,
+                        it.message ?: getString(R.string.inventory_option_delete_failed),
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+        }
+    }
 
     private fun fieldLabelRes(): Int = when (fieldType) {
         FIELD_BRAND -> R.string.brand
@@ -343,7 +599,12 @@ class CategoryPickerFragment : Fragment() {
         else -> R.string.category_already_exists
     }
 
-    private fun returnSelection(selectedValue: String, selectedId: String = "", addedValue: String = "") {
+    private fun returnSelection(
+        selectedValue: String,
+        selectedId: String = "",
+        addedValue: String = "",
+        clearSelection: Boolean = false
+    ) {
         findNavController().previousBackStackEntry?.savedStateHandle?.set(
             RESULT_KEY,
             Bundle().apply {
@@ -351,6 +612,7 @@ class CategoryPickerFragment : Fragment() {
                 putString(RESULT_SELECTED_VALUE, selectedValue)
                 putString(RESULT_SELECTED_ID, selectedId)
                 putString(RESULT_ADDED_VALUE, addedValue)
+                putBoolean(RESULT_CLEAR_SELECTION, clearSelection)
             }
         )
         findNavController().popBackStack()
@@ -373,13 +635,15 @@ class CategoryPickerFragment : Fragment() {
         const val ARG_FIELD_TYPE = "fieldType"
         const val ARG_CURRENT_CATEGORY = "currentCategory"
         const val ARG_PENDING_CATEGORIES = "pendingCategories"
-        const val ARG_CURRENT_BRANCH_ID = "currentBranchId"
         const val ARG_PARENT_CATEGORY = "parentCategory"
         const val RESULT_KEY = "categoryPickerResult"
         const val RESULT_FIELD_TYPE = "fieldType"
         const val RESULT_SELECTED_VALUE = "selectedValue"
         const val RESULT_SELECTED_ID = "selectedId"
         const val RESULT_ADDED_VALUE = "addedValue"
+        const val RESULT_CLEAR_SELECTION = "clearSelection"
+        private const val NO_BRAND_VALUE = ""
+        private const val OTHER_CATEGORY_VALUE = "Other"
     }
 }
 
@@ -387,7 +651,8 @@ private data class CategoryPickerOption(
     val label: String,
     val kind: CategoryOptionKind = CategoryOptionKind.EXISTING,
     val id: String = "",
-    val secondary: String = ""
+    val secondary: String = "",
+    val masterOption: InventoryOption? = null
 )
 
 private enum class CategoryOptionKind {
@@ -396,37 +661,95 @@ private enum class CategoryOptionKind {
 }
 
 private class CategoryPickerAdapter(
-    private val onCategorySelected: (CategoryPickerOption) -> Unit
+    private val onCategorySelected: (CategoryPickerOption) -> Unit,
+    private val onEdit: (CategoryPickerOption) -> Unit,
+    private val onDelete: (CategoryPickerOption) -> Unit
 ) : RecyclerView.Adapter<CategoryPickerAdapter.CategoryViewHolder>() {
 
     private val items = mutableListOf<CategoryPickerOption>()
+    private var openOptionKey: String? = null
 
     fun submitList(newItems: List<CategoryPickerOption>) {
         items.clear()
         items.addAll(newItems)
+        if (items.none { it.key == openOptionKey }) openOptionKey = null
         notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
-        val binding = ItemCategoryOptionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemInventoryOptionSwipeBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CategoryViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
-        holder.bind(items[position], onCategorySelected)
+        val option = items[position]
+        holder.bind(
+            option = option,
+            isOpen = option.key == openOptionKey,
+            onCategorySelected = {
+                closeOpenOption()
+                onCategorySelected(it)
+            },
+            onEdit = {
+                closeOpenOption()
+                onEdit(it)
+            },
+            onDelete = {
+                closeOpenOption()
+                onDelete(it)
+            },
+            onOpened = {
+                val previous = openOptionKey
+                openOptionKey = it.key
+                previous?.let(::notifyOptionChanged)
+            },
+            onClosed = {
+                if (openOptionKey == it.key) openOptionKey = null
+            }
+        )
     }
 
     override fun getItemCount(): Int = items.size
 
-    class CategoryViewHolder(
-        private val binding: ItemCategoryOptionBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+    override fun onViewRecycled(holder: CategoryViewHolder) {
+        holder.closeActions(animate = false)
+        super.onViewRecycled(holder)
+    }
 
-        fun bind(option: CategoryPickerOption, onCategorySelected: (CategoryPickerOption) -> Unit) {
+    private fun closeOpenOption() {
+        val previous = openOptionKey ?: return
+        openOptionKey = null
+        notifyOptionChanged(previous)
+    }
+
+    private fun notifyOptionChanged(key: String) {
+        val index = items.indexOfFirst { it.key == key }
+        if (index >= 0) notifyItemChanged(index)
+    }
+
+    class CategoryViewHolder(
+        private val binding: ItemInventoryOptionSwipeBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+        private var isRevealed = false
+        private var downX = 0f
+        private var downY = 0f
+        private var startTranslationX = 0f
+        private var isDraggingSwipe = false
+
+        fun bind(
+            option: CategoryPickerOption,
+            isOpen: Boolean,
+            onCategorySelected: (CategoryPickerOption) -> Unit,
+            onEdit: (CategoryPickerOption) -> Unit,
+            onDelete: (CategoryPickerOption) -> Unit,
+            onOpened: (CategoryPickerOption) -> Unit,
+            onClosed: (CategoryPickerOption) -> Unit
+        ) {
             binding.categoryTextView.text = option.label
             binding.secondaryTextView.text = option.secondary
             binding.secondaryTextView.isVisible = option.secondary.isNotBlank()
             val isAddRow = option.kind == CategoryOptionKind.ADD_NEW
+            val isManageable = option.masterOption != null
             binding.categoryTextView.setTextColor(
                 ContextCompat.getColor(
                     binding.root.context,
@@ -437,7 +760,112 @@ private class CategoryPickerAdapter(
             if (isAddRow) {
                 binding.trailingIconView.setImageResource(R.drawable.ic_add)
             }
-            binding.root.setOnClickListener { onCategorySelected(option) }
+            if (isOpen && isManageable) revealActions(animate = false) else closeActions(animate = false)
+            binding.optionForeground.setOnClickListener {
+                if (isRevealed) {
+                    closeActions()
+                    onClosed(option)
+                } else {
+                    onCategorySelected(option)
+                }
+            }
+            binding.editAction.setOnClickListener { if (isManageable) onEdit(option) }
+            binding.deleteAction.setOnClickListener { if (isManageable) onDelete(option) }
+            setupSwipeTouch(option, isManageable, onOpened, onClosed)
         }
+
+        private fun setupSwipeTouch(
+            option: CategoryPickerOption,
+            isManageable: Boolean,
+            onOpened: (CategoryPickerOption) -> Unit,
+            onClosed: (CategoryPickerOption) -> Unit
+        ) {
+            if (!isManageable) {
+                binding.optionForeground.setOnTouchListener(null)
+                return
+            }
+            val touchSlop = ViewConfiguration.get(binding.root.context).scaledTouchSlop
+            binding.optionForeground.setOnTouchListener { view, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        downX = event.rawX
+                        downY = event.rawY
+                        startTranslationX = binding.optionForeground.translationX
+                        isDraggingSwipe = false
+                        binding.optionForeground.animate().cancel()
+                        false
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx = event.rawX - downX
+                        val dy = event.rawY - downY
+                        if (!isDraggingSwipe &&
+                            kotlin.math.abs(dx) > touchSlop &&
+                            kotlin.math.abs(dx) > kotlin.math.abs(dy)
+                        ) {
+                            isDraggingSwipe = true
+                            view.parent?.requestDisallowInterceptTouchEvent(true)
+                        }
+                        if (isDraggingSwipe) {
+                            setSwipeOffset(startTranslationX + dx)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        if (!isDraggingSwipe) return@setOnTouchListener false
+                        view.parent?.requestDisallowInterceptTouchEvent(false)
+                        if (kotlin.math.abs(binding.optionForeground.translationX) > revealWidth() * 0.25f) {
+                            revealActions()
+                            onOpened(option)
+                        } else {
+                            closeActions()
+                            onClosed(option)
+                        }
+                        isDraggingSwipe = false
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+
+        private fun setSwipeOffset(offset: Float) {
+            val clamped = offset.coerceIn(-revealWidth(), 0f)
+            binding.swipeActionContainer.isVisible = clamped < 0f
+            binding.optionForeground.translationX = clamped
+            isRevealed = clamped < 0f
+        }
+
+        private fun revealActions(animate: Boolean = true) {
+            isRevealed = true
+            binding.swipeActionContainer.isVisible = true
+            moveForegroundTo(-revealWidth(), animate)
+        }
+
+        fun closeActions(animate: Boolean = true) {
+            isRevealed = false
+            moveForegroundTo(0f, animate)
+        }
+
+        private fun moveForegroundTo(target: Float, animate: Boolean) {
+            binding.optionForeground.animate().cancel()
+            if (animate) {
+                binding.optionForeground.animate()
+                    .translationX(target)
+                    .setDuration(160L)
+                    .withEndAction { binding.swipeActionContainer.isVisible = target < 0f }
+                    .start()
+            } else {
+                binding.optionForeground.translationX = target
+                binding.swipeActionContainer.isVisible = target < 0f
+            }
+        }
+
+        private fun revealWidth(): Float =
+            binding.root.resources.getDimensionPixelSize(R.dimen.inventory_swipe_action_width) * 2f
     }
+
+    private val CategoryPickerOption.key: String
+        get() = masterOption?.id?.takeIf { it.isNotBlank() } ?: "${kind.name}:$label"
 }

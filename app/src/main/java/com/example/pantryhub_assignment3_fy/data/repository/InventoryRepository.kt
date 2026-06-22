@@ -4,6 +4,7 @@ import com.example.pantryhub_assignment3_fy.data.firebase.FirebaseAuthManager
 import com.example.pantryhub_assignment3_fy.data.firebase.FirestoreDataSource
 import com.example.pantryhub_assignment3_fy.model.ActivityActionType
 import com.example.pantryhub_assignment3_fy.model.Branch
+import com.example.pantryhub_assignment3_fy.model.ExpiryLot
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
 import com.example.pantryhub_assignment3_fy.model.InventoryStatus
 import com.example.pantryhub_assignment3_fy.model.StockMovementType
@@ -42,7 +43,10 @@ class InventoryRepository(
     /**
      * Streams live inventoryItem updates for the signed-in user's current store.
      */
-    fun observeInventoryItems(includeArchived: Boolean = true): Flow<Result<List<InventoryItem>>> = callbackFlow {
+    fun observeInventoryItems(
+        includeArchived: Boolean = true,
+        includeExpiryLots: Boolean = false
+    ): Flow<Result<List<InventoryItem>>> = callbackFlow {
         val userProfile = currentUserProfile()
         val storeId = userProfile?.currentStoreId
         if (storeId.isNullOrBlank()) {
@@ -66,8 +70,14 @@ class InventoryRepository(
                         .map { it.toInventoryItem() }
                         .filter { includeArchived || !it.isArchived }
                         .map { inventoryItem ->
-                            val lots = runCatching { expiryLotRepository.loadLots(inventoryItem) }.getOrDefault(emptyList())
-                            val nearestExpiry = lots.mapNotNull { it.expiryDate }.minOrNull() ?: inventoryItem.expiryDate.takeIf { it > 0L } ?: 0L
+                            val lots = if (includeExpiryLots) {
+                                runCatching { expiryLotRepository.loadLots(inventoryItem) }.getOrDefault(emptyList())
+                            } else {
+                                inventoryItem.lightweightExpiryLots()
+                            }
+                            val nearestExpiry = lots.mapNotNull { it.expiryDate }.minOrNull()
+                                ?: inventoryItem.expiryDate.takeIf { it > 0L }
+                                ?: 0L
                             val withLots = inventoryItem.copy(expiryLots = lots, expiryDate = nearestExpiry)
                             val calculatedStatus = InventoryStatusCalculator.calculate(withLots)
                             if (calculatedStatus.name == withLots.status) withLots else withLots.copy(status = calculatedStatus.name)
@@ -90,6 +100,29 @@ class InventoryRepository(
         val snapshot = inventoryItemsCollection(storeId).document(inventoryItemId).get().await()
         if (!snapshot.exists()) error("Stock item not found.")
         snapshot.toInventoryItem()
+    }
+
+    suspend fun findMatchingInventoryItemForLocation(
+        branchId: String,
+        sku: String,
+        barcode: String,
+        name: String,
+        brand: String,
+        category: String
+    ): Result<InventoryItem?> = runCatching {
+        if (branchId.isBlank()) return@runCatching null
+        val probe = InventoryItem(
+            sku = sku,
+            barcode = barcode,
+            name = name,
+            brand = brand,
+            category = category
+        )
+        loadInventoryItems(currentStoreId())
+            .filterNot { it.isArchived }
+            .firstOrNull { item ->
+                item.branchId == branchId && ProductIdentity.sameProduct(item, probe)
+            }
     }
 
     suspend fun generateUniqueDisplaySku(): Result<String> = runCatching {
@@ -239,6 +272,117 @@ class InventoryRepository(
             quantity = input.quantity,
             unit = productTemplate.unit,
             note = if (receivedFromRestockOrder) "Restocked from restock list" else "Added to inventory"
+        ).getOrThrow()
+        selectedRecord.id
+    }
+
+    /**
+     * CSV import creates the selected product/location row with its imported quantity directly.
+     * This avoids leaving bulk-imported rows at zero if later stock-lot setup is not required.
+     */
+    suspend fun importInventoryItem(input: InventoryItem): Result<String> = runCatching {
+        val userId = authManager.currentUserId ?: error("You must be logged in.")
+        val storeId = currentStoreId()
+        val existingItems = loadInventoryItems(storeId)
+        val finalSku = input.sku.trim().ifBlank {
+            SkuGenerator.generateUniqueSku(input, existingItems.map { it.sku })
+        }
+        val productTemplate = input.copy(
+            sku = finalSku,
+            barcode = input.barcode.trim(),
+            reorderThreshold = StockLevelRules.effectiveReorderPoint(input),
+            createdBy = userId,
+            updatedBy = userId,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        val existingSelectedRecord = existingItems.firstOrNull {
+            it.branchId == productTemplate.branchId && ProductIdentity.sameProduct(it, productTemplate)
+        }
+        if (existingSelectedRecord != null) {
+            val now = System.currentTimeMillis()
+            val updated = productTemplate.copy(
+                id = existingSelectedRecord.id,
+                branchId = existingSelectedRecord.branchId,
+                branchName = existingSelectedRecord.branchName.ifBlank { productTemplate.branchName },
+                quantity = productTemplate.quantity,
+                status = InventoryStatusCalculator.calculate(productTemplate.copy(quantity = productTemplate.quantity)).name,
+                createdBy = existingSelectedRecord.createdBy.ifBlank { userId },
+                createdAt = existingSelectedRecord.createdAt.takeIf { it > 0L } ?: now,
+                updatedBy = userId,
+                updatedAt = now,
+                expiryLotsInitialized = existingSelectedRecord.expiryLotsInitialized
+            )
+            inventoryItemsCollection(storeId).document(existingSelectedRecord.id).set(updated.toFirestoreMap()).await()
+            activityRepository.addActivityLog(
+                actionType = ActivityActionType.INVENTORY_ITEM_CREATED,
+                inventoryItemId = updated.id,
+                itemName = updated.name,
+                quantity = updated.quantity,
+                unit = updated.unit,
+                note = "Updated from inventory CSV"
+            ).getOrThrow()
+            return@runCatching updated.id
+        }
+        val branches = loadBranches(storeId).ifEmpty {
+            listOf(Branch(id = productTemplate.branchId, name = productTemplate.branchName))
+        }.filter { it.id.isNotBlank() }
+        val sameProductRecords = existingItems.filter { ProductIdentity.sameProduct(it, productTemplate) }
+        val existingBranchIds = sameProductRecords.map { it.branchId }.toSet()
+        val selectedBranchId = productTemplate.branchId.ifBlank { error("CSV row must resolve to a location.") }
+        val selectedBranch = branches.firstOrNull { it.id == selectedBranchId }
+            ?: Branch(id = selectedBranchId, name = productTemplate.branchName)
+        val missingBranches = branches
+            .filter { it.id.isNotBlank() && it.id !in existingBranchIds }
+            .distinctBy { it.id }
+        val branchesToWrite = (missingBranches + selectedBranch).distinctBy { it.id }
+
+        val now = System.currentTimeMillis()
+        val records = branchesToWrite.associate { branch ->
+            val document = inventoryItemsCollection(storeId).document(productLocationDocumentId(productTemplate, branch.id))
+            val importedQuantity = if (branch.id == selectedBranchId) productTemplate.quantity else 0.0
+            val record = productTemplate.copy(
+                id = document.id,
+                branchId = branch.id,
+                branchName = branch.name,
+                quantity = importedQuantity,
+                expiryDate = if (importedQuantity > 0.0) productTemplate.expiryDate else 0L,
+                status = InventoryStatusCalculator.calculate(productTemplate.copy(quantity = importedQuantity)).name,
+                createdBy = userId,
+                createdAt = now,
+                updatedBy = userId,
+                updatedAt = now,
+                expiryLotsInitialized = false
+            )
+            branch.id to record
+        }
+
+        records.values.chunked(FIRESTORE_BATCH_WRITE_LIMIT).forEach { chunk ->
+            val batch = firestoreDataSource.db.batch()
+            chunk.forEach { record ->
+                batch.set(inventoryItemsCollection(storeId).document(record.id), record.toFirestoreMap())
+            }
+            batch.commit().await()
+        }
+
+        val zeroStockCount = records.values.count { it.branchId != selectedBranchId && it.quantity == 0.0 }
+        if (zeroStockCount > 0) {
+            AppLogger.info(
+                area = "Items",
+                event = "zero_stock_records_created",
+                message = "Created zero-stock records for other locations during CSV import.",
+                "item" to productTemplate.name,
+                "count" to zeroStockCount
+            )
+        }
+        val selectedRecord = records[selectedBranchId] ?: error("Could not create imported inventory record.")
+        activityRepository.addActivityLog(
+            actionType = ActivityActionType.INVENTORY_ITEM_CREATED,
+            inventoryItemId = selectedRecord.id,
+            itemName = selectedRecord.name,
+            quantity = selectedRecord.quantity,
+            unit = selectedRecord.unit,
+            note = "Imported from inventory CSV"
         ).getOrThrow()
         selectedRecord.id
     }
@@ -558,6 +702,29 @@ class InventoryRepository(
                 name = snapshot.getString("name").orEmpty()
             )
         }
+
+    /**
+     * Keeps list/dashboard streams fast by avoiding an expiryLots subcollection read
+     * for every inventory row. Exact lot breakdowns can opt in with includeExpiryLots=true.
+     */
+    private fun InventoryItem.lightweightExpiryLots(): List<ExpiryLot> {
+        val expiry = expiryDate.takeIf { it > 0L } ?: return emptyList()
+        if (quantity <= 0.0) return emptyList()
+        return listOf(
+            ExpiryLot(
+                id = "summary-$id",
+                inventoryItemId = id,
+                branchId = branchId,
+                branchName = branchName,
+                expiryDate = expiry,
+                quantity = quantity,
+                receivedAt = createdAt,
+                createdBy = createdBy,
+                createdAt = createdAt,
+                updatedAt = updatedAt
+            )
+        )
+    }
 
     private suspend fun createMissingProductLocationRecords(
         storeId: String,

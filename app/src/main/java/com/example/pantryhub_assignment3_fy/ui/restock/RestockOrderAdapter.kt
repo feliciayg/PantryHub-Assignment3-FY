@@ -28,7 +28,7 @@ class PurchaseOrderAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: RestockOrder) {
             binding.orderNumberTextView.text = item.fallbackOrderLabel
-            binding.statusChip.text = item.normalizedStatus.purchaseStatusLabel()
+            binding.statusChip.text = binding.root.context.getString(item.normalizedStatus.purchaseStatusLabelRes())
             binding.statusChip.setChipBackgroundColorResource(item.normalizedStatus.purchaseStatusBackgroundColorRes())
             binding.statusChip.setTextColor(binding.root.context.getColor(R.color.inventory_text_primary))
             binding.archivedBadgeTextView.visibility = if (item.isArchived) android.view.View.VISIBLE else android.view.View.GONE

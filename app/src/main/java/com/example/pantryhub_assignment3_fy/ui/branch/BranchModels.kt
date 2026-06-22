@@ -1,11 +1,13 @@
 package com.example.pantryhub_assignment3_fy.ui.branch
 
+import androidx.annotation.StringRes
+import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.model.Branch
 
-enum class BranchArchiveFilter(val label: String) {
-    ACTIVE("Active"),
-    ARCHIVED("Archived"),
-    ALL("All")
+enum class BranchArchiveFilter(@StringRes val labelRes: Int) {
+    ACTIVE(R.string.active),
+    ARCHIVED(R.string.archived),
+    ALL(R.string.all)
 }
 
 data class BranchUiState(

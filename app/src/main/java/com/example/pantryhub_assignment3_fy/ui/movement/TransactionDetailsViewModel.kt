@@ -138,33 +138,33 @@ class TransactionDetailsViewModel(
         val counterparty = firstOrNull {
             it.counterpartyName.isNotBlank()
         }?.counterpartyName.orEmpty()
-        val performedByName = primary.performedByName.ifBlank { "Unknown staff" }
+        val performedByName = primary.performedByName
         val memoText = map { it.note.trim() }
             .filter { it.isNotBlank() }
             .distinct()
             .joinToString("\n")
         val transactionRows = buildList {
-            if (occurredAt > 0L) add(TransactionDetailRow("Date", occurredAt.toDisplayDateTime()))
+            if (occurredAt > 0L) add(TransactionDetailRow(R.string.date, occurredAt.toDisplayDateTime()))
             if (mode == TransactionMode.MOVE_STOCK) {
-                if (fromLocation.isNotBlank()) add(TransactionDetailRow("From", fromLocation))
-                if (toLocation.isNotBlank()) add(TransactionDetailRow("To", toLocation))
+                if (fromLocation.isNotBlank()) add(TransactionDetailRow(R.string.from, fromLocation))
+                if (toLocation.isNotBlank()) add(TransactionDetailRow(R.string.to, toLocation))
             } else {
-                if (location.isNotBlank()) add(TransactionDetailRow("Location", location))
+                if (location.isNotBlank()) add(TransactionDetailRow(R.string.location, location))
             }
             if (counterparty.isNotBlank() && mode == TransactionMode.STOCK_IN) {
-                add(TransactionDetailRow("Partner", counterparty))
+                add(TransactionDetailRow(R.string.partner, counterparty))
             } else if (counterparty.isNotBlank() && mode == TransactionMode.STOCK_OUT) {
-                add(TransactionDetailRow("Customer", counterparty))
+                add(TransactionDetailRow(R.string.customer, counterparty))
             }
         }
         return TransactionDetailsUiModel(
             transactionId = transactionReference,
-            title = mode.displayName(),
+            titleRes = mode.displayNameRes(),
             iconRes = mode.iconRes(),
             colorRes = color,
             performedByName = performedByName,
             quantitySummary = "",
-            status = "Completed",
+            statusRes = R.string.completed,
             transactionRows = transactionRows,
             itemLines = itemLines(mode, inventory, color),
             additionalRows = emptyList(),
@@ -235,11 +235,11 @@ class TransactionDetailsViewModel(
         else -> TransactionMode.STOCK_IN
     }
 
-    private fun TransactionMode.displayName(): String = when (this) {
-        TransactionMode.STOCK_IN -> "Stock In"
-        TransactionMode.STOCK_OUT -> "Stock Out"
-        TransactionMode.MOVE_STOCK -> "Move Stock"
-        TransactionMode.ADJUST_STOCK -> "Adjust Stock"
+    private fun TransactionMode.displayNameRes(): Int = when (this) {
+        TransactionMode.STOCK_IN -> R.string.stock_in
+        TransactionMode.STOCK_OUT -> R.string.stock_out
+        TransactionMode.MOVE_STOCK -> R.string.move_stock
+        TransactionMode.ADJUST_STOCK -> R.string.adjust_stock
     }
 
     private fun TransactionMode.iconRes(): Int = when (this) {

@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.databinding.BottomSheetTransactionTypeBinding
@@ -43,10 +44,12 @@ class InventoryItemDetailFragment : Fragment() {
     private var _binding: FragmentInventoryItemDetailBinding? = null
     private val binding get() = _binding!!
     private val viewModel: InventoryViewModel by activityViewModels()
+    private val expiryViewModel: InventoryItemExpiryViewModel by viewModels()
     private lateinit var inventoryItemId: String
     private var summaryBranchId: String = ""
     private var representativeItem: InventoryItem? = null
     private var matchingItems: List<InventoryItem> = emptyList()
+    private var matchingItemSummaries: List<InventoryItem> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentInventoryItemDetailBinding.inflate(inflater, container, false)
@@ -63,14 +66,21 @@ class InventoryItemDetailFragment : Fragment() {
         binding.allLocationsSummaryRow.setOnClickListener { openTransactionBreakdown(summaryBranchId) }
         binding.transactButton.setOnClickListener { showTransactionTypeSheet() }
 
+        expiryViewModel.uiState.observe(viewLifecycleOwner) { expiryState ->
+            applyExactExpiryLots(expiryState.lotsByItemId)
+            expiryState.errorMessage?.let {
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+                expiryViewModel.clearError()
+            }
+        }
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             val selected = state.inventoryItems.firstOrNull { it.id == inventoryItemId }
             if (selected != null) {
-                representativeItem = selected
-                matchingItems = state.inventoryItems
+                matchingItemSummaries = state.inventoryItems
                     .filter { ProductIdentity.sameProduct(selected, it) }
                     .sortedBy { it.branchName.lowercase() }
-                render(selected)
+                expiryViewModel.loadLots(matchingItemSummaries)
+                applyExactExpiryLots(expiryViewModel.uiState.value?.lotsByItemId.orEmpty())
             }
             state.errorMessage?.let {
                 Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
@@ -81,6 +91,20 @@ class InventoryItemDetailFragment : Fragment() {
                 viewModel.clearMessages()
             }
         }
+    }
+
+    private fun applyExactExpiryLots(lotsByItemId: Map<String, List<ExpiryLot>>) {
+        if (matchingItemSummaries.isEmpty()) return
+        matchingItems = matchingItemSummaries.map { item ->
+            if (lotsByItemId.containsKey(item.id)) {
+                item.copy(expiryLots = lotsByItemId[item.id].orEmpty())
+            } else {
+                item
+            }
+        }
+        representativeItem = matchingItems.firstOrNull { it.id == inventoryItemId }
+            ?: matchingItems.firstOrNull()
+        representativeItem?.let(::render)
     }
 
     private fun setupToolbar() {
@@ -157,14 +181,14 @@ class InventoryItemDetailFragment : Fragment() {
 
     private fun renderDetailsTab(item: InventoryItem) {
         binding.detailsRowsContainer.removeAllViews()
-        addDetailRow("SKU", item.sku.ifBlank { getString(R.string.not_added) })
-        addDetailRow("Barcode", item.barcode.ifBlank { getString(R.string.not_added) })
+        addDetailRow(getString(R.string.sku), item.sku.ifBlank { getString(R.string.not_added) })
+        addDetailRow(getString(R.string.barcode), item.barcode.ifBlank { getString(R.string.not_added) })
         addSectionDivider(binding.detailsRowsContainer)
-        addDetailRow("Category", item.category.ifBlank { getString(R.string.not_added) })
-        addDetailRow("Brand", item.brand.ifBlank { getString(R.string.not_added) })
+        addDetailRow(getString(R.string.category), item.category.ifBlank { getString(R.string.not_added) })
+        addDetailRow(getString(R.string.brand), item.brand.ifBlank { getString(R.string.not_added) })
         addSectionDivider(binding.detailsRowsContainer)
-        addDetailRow("Cost", item.costPrice.toStorageMoneyText())
-        addDetailRow("Price", item.sellingPrice.toStorageMoneyText())
+        addDetailRow(getString(R.string.cost), item.costPrice.toStorageMoneyText())
+        addDetailRow(getString(R.string.price), item.sellingPrice.toStorageMoneyText())
         renderExpirySummary()
     }
 
@@ -307,6 +331,27 @@ class InventoryItemDetailFragment : Fragment() {
             affectedLocations.toString(),
             R.color.inventory_text_primary
         )
+        addExpiryBatchBreakdown(lots)
+    }
+
+    private fun addExpiryBatchBreakdown(lots: List<ExpiryLot>) {
+        binding.expirySummaryRowsContainer.addView(TextView(requireContext()).apply {
+            text = getString(R.string.expiry_batches)
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_primary))
+            textSize = 15f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_md),
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_xs)
+            )
+        })
+        ExpiryLotRules.sorted(lots).forEach { lot ->
+            val label = lot.expiryDate?.let(DateUtils::formatDisplayDate)
+                ?: getString(R.string.no_expiry_tracked)
+            addSummaryRow(label, formatQuantity(lot.quantity), lot.expiryColor())
+        }
     }
 
     private fun addSummaryRow(label: String, value: String, valueColorRes: Int) {
@@ -453,17 +498,27 @@ class InventoryItemDetailFragment : Fragment() {
     }
 
     private fun openTransaction(mode: TransactionMode) {
+        // Reuse the exact branch record that opened Item Info. Alert/location drill-downs take
+        // priority; the opened inventory record is the fallback for the normal Items list.
+        val item = when {
+            summaryBranchId.isNotBlank() -> summaryItems().firstOrNull()
+            matchingItems.size == 1 -> matchingItems.first()
+            else -> representativeItem
+        }
         AppLogger.info(
             area = "Transactions",
             event = "transaction_mode_selected",
             message = "Transaction mode selected from item detail.",
             "mode" to mode.name,
-            "item" to representativeItem?.name.orEmpty()
+            "item" to (item?.name ?: representativeItem?.name).orEmpty()
         )
         findNavController().navigate(
             R.id.stockInTransactionFragment,
             Bundle().apply {
                 putString(StockInTransactionFragment.ARG_TRANSACTION_MODE, mode.name)
+                putString(StockInTransactionFragment.ARG_PREFILL_ITEM_ID, item?.id.orEmpty())
+                putString(StockInTransactionFragment.ARG_PREFILL_BRANCH_ID, item?.branchId.orEmpty())
+                putString(StockInTransactionFragment.ARG_PREFILL_BRANCH_NAME, item?.branchName.orEmpty())
             }
         )
     }

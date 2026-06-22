@@ -233,13 +233,23 @@ class InventoryAdapter(
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             val today = LocalDate.now()
+            val isLightweightSummary = lot.id.startsWith(SUMMARY_LOT_PREFIX)
             binding.expiryTextView.text = when {
                 expiryLocalDate.isBefore(today) ->
-                    "Expired ${DateUtils.formatDisplayDate(expiryDate)} (${lot.quantity.toStorageQuantityText()})"
+                    if (isLightweightSummary) {
+                        "Expired ${DateUtils.formatDisplayDate(expiryDate)}"
+                    } else {
+                        "Expired ${DateUtils.formatDisplayDate(expiryDate)} (${lot.quantity.toStorageQuantityText()})"
+                    }
                 expiryLocalDate == today ->
-                    "Expires today (${lot.quantity.toStorageQuantityText()})"
+                    if (isLightweightSummary) "Expires today"
+                    else "Expires today (${lot.quantity.toStorageQuantityText()})"
                 else ->
-                    "Expires ${DateUtils.formatDisplayDate(expiryDate)} (${lot.quantity.toStorageQuantityText()})"
+                    if (isLightweightSummary) {
+                        "Expires ${DateUtils.formatDisplayDate(expiryDate)}"
+                    } else {
+                        "Expires ${DateUtils.formatDisplayDate(expiryDate)} (${lot.quantity.toStorageQuantityText()})"
+                    }
             }
             val color = if (expiryLocalDate.isBefore(today)) {
                 R.color.inventory_danger
@@ -247,6 +257,10 @@ class InventoryAdapter(
                 R.color.inventory_warning
             }
             binding.expiryTextView.setTextColor(ContextCompat.getColor(binding.root.context, color))
+        }
+
+        companion object {
+            private const val SUMMARY_LOT_PREFIX = "summary-"
         }
 
         private fun InventoryDisplayRow.supportingText(): String = listOf(

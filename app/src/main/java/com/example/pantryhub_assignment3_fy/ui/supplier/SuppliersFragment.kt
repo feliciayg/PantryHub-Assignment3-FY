@@ -100,7 +100,7 @@ class SuppliersFragment : Fragment() {
     private fun setupTabs() {
         if (binding.partnerTabLayout.tabCount > 0) return
         PartnerTab.entries.forEach { tab ->
-            binding.partnerTabLayout.addTab(binding.partnerTabLayout.newTab().setText(tab.label))
+            binding.partnerTabLayout.addTab(binding.partnerTabLayout.newTab().setText(tab.labelRes))
         }
         binding.partnerTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {

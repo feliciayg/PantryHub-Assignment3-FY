@@ -115,7 +115,7 @@ class NotificationPreferencesFragment : Fragment() {
         renderNotificationRows()
 
         lifecycleScope.launch {
-            val result = inventoryRepository.observeInventoryItems().first()
+            val result = inventoryRepository.observeInventoryItems(includeExpiryLots = true).first()
             result
                 .onSuccess { inventoryItems ->
                     InventoryReminderScheduler.scheduleAll(requireContext(), inventoryItems)

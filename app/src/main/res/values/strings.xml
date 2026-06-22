@@ -78,6 +78,7 @@
     <string name="expired_difference_label">Expired removed</string>
     <string name="expiry_breakdown">Expiry Breakdown</string>
     <string name="expiry_summary">Expiry Summary</string>
+    <string name="expiry_batches">Expiry Batches</string>
     <string name="next_expiry">Next Expiry</string>
     <string name="expiring_soon_quantity">Expiring Soon</string>
     <string name="expired_quantity">Expired Qty</string>
@@ -92,7 +93,9 @@
     <string name="expires_on_quantity">Expires %1$s • %2$s %3$s</string>
     <string name="all_dates">All Dates</string>
     <string name="select_date">Select Date</string>
-    <string name="select_partner">Select Partner</string>
+    <string name="select_partner">Select a partner</string>
+    <string name="select_a_partner">Select a partner</string>
+    <string name="select_a_customer">Select a customer</string>
     <string name="search_partner">Search partner</string>
     <string name="search_or_enter_location">Search or enter a location</string>
     <string name="search_or_enter_partner">Search or enter a partner</string>
@@ -169,6 +172,8 @@
     <string name="attributes">Attributes</string>
     <string name="attributes_info">Attributes help</string>
     <string name="enter_a_value">Enter a value</string>
+    <string name="select_a_category">Select a category</string>
+    <string name="select_a_brand">Select a brand</string>
     <string name="search_or_enter_value">Search or enter a value</string>
     <string name="safety_stock_hint">e.g. 10</string>
     <string name="select_a_date">Select a date</string>
@@ -224,6 +229,8 @@
     <string name="search_member_name">Search by member name</string>
     <string name="search_location_name">Search by location name</string>
     <string name="all_items">All items</string>
+    <string name="inventory_active_filter">%1$s filter active · Return to all items</string>
+    <string name="clear_inventory_filter">Clear inventory status filter and view all items</string>
     <string name="all_members">All members</string>
     <string name="all_partners">All partners</string>
     <string name="unknown_member">Unknown member</string>
@@ -385,6 +392,7 @@
     <string name="edit_location_title">Edit Location</string>
     <string name="view_details">View details</string>
     <string name="suppliers">Suppliers</string>
+    <string name="customers">Customers</string>
     <string name="supplier_management">Supplier Management</string>
     <string name="partners">Partners</string>
     <string name="add_supplier">Add Supplier</string>
@@ -452,6 +460,18 @@
     <string name="sort_name_az">Name: A-Z</string>
     <string name="sort_name_za">Name: Z-A</string>
     <string name="sort_quantity_low">Quantity: Low to High</string>
+    <string name="sort_quantity_high">Quantity: High to Low</string>
+    <string name="sort_safety_stock_low">Safety Stock: Low to High</string>
+    <string name="sort_restock_urgency">Restock Urgency</string>
+    <string name="sort_recently_updated">Recently Updated</string>
+    <string name="group_none_all">None (All)</string>
+    <string name="group_sort_value_az">Group Value: A-Z</string>
+    <string name="group_sort_value_za">Group Value: Z-A</string>
+    <string name="group_sort_quantity_high">Total Quantity: High to Low</string>
+    <string name="group_sort_quantity_low">Total Quantity: Low to High</string>
+    <string name="group_sort_item_count_high">Item Count: High to Low</string>
+    <string name="group_sort_item_count_low">Item Count: Low to High</string>
+    <string name="group_detail_title_format">%1$s: %2$s</string>
     <string name="recently_added">Recently Added</string>
     <string name="delete">Delete</string>
     <string name="archive">Archive</string>
@@ -531,6 +551,14 @@
     <string name="suggested">Suggested</string>
     <string name="create_order">Create Order</string>
     <string name="purchase_items_summary">%1$d items / %2$s %3$s</string>
+    <string name="purchase_receive_selection_summary">%1$s / %2$s</string>
+    <string name="purchase_receive_success_title">Stock In Successful</string>
+    <string name="purchase_receive_success_message">%1$s successfully stocked in.\nTotal received: %2$s</string>
+    <string name="view_stock_in">View Stock In</string>
+    <plurals name="item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
     <string name="no_items_for_purchase_picker">No matching items found.</string>
     <string name="pending_time">Pending time</string>
     <string name="subtotal">Subtotal</string>
@@ -544,6 +572,8 @@
     <string name="add">Add</string>
     <string name="add_to_inventory">Add to Inventory</string>
     <string name="empty_restock_orders">No purchases match this view yet.</string>
+    <string name="completed">Completed</string>
+    <string name="unknown_staff">Unknown staff</string>
     <string name="saved">Saved</string>
     <string name="items">items</string>
     <string name="expired">Expired</string>
@@ -657,4 +687,38 @@
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
     </plurals>
+    <string name="rename">Rename</string>
+    <string name="no_brand">No brand</string>
+    <string name="uncategorised">Uncategorised</string>
+    <string name="rename_inventory_option">Rename “%1$s”</string>
+    <string name="rename_inventory_option_unused">This choice is not used by any inventory records.</string>
+    <string name="delete_inventory_option">Delete “%1$s”?</string>
+    <string name="delete_unused_inventory_option_message">This choice is not used by any inventory records and can be deleted safely.</string>
+    <string name="replace_and_delete">Replace and Delete</string>
+    <string name="create_replacement_before_delete">Create another choice before deleting this one.</string>
+    <string name="inventory_option_save_failed">Could not save this choice.</string>
+    <string name="inventory_option_delete_failed">Could not delete this choice.</string>
+    <string name="inventory_option_renamed">Choice renamed successfully.</string>
+    <string name="inventory_option_deleted">Choice deleted successfully.</string>
+    <plurals name="rename_inventory_option_usage">
+        <item quantity="one">This will update %d inventory record that currently uses this choice.</item>
+        <item quantity="other">This will update %d inventory records that currently use this choice.</item>
+    </plurals>
+    <plurals name="replace_inventory_option_usage">
+        <item quantity="one">This choice is used by %d inventory record. Select its replacement before deleting.</item>
+        <item quantity="other">This choice is used by %d inventory records. Select their replacement before deleting.</item>
+    </plurals>
+    <string name="add_custom_unit">Custom unit…</string>
+    <string name="manage_custom_units">Manage custom units</string>
+    <string name="custom_unit_symbol">Unit symbol</string>
+    <string name="custom_unit_helper">Enter a short symbol such as tray or roll.</string>
+    <string name="unit_required">Enter a unit symbol.</string>
+    <string name="custom_unit_added">Custom unit added.</string>
+    <string name="custom_unit_save_failed">Could not save the custom unit.</string>
+    <string name="no_custom_units">No custom units have been added.</string>
+    <string name="delete_custom_unit">Delete %1$s</string>
+    <string name="delete_custom_unit_title">Delete “%1$s”?</string>
+    <string name="delete_custom_unit_message">This unit can be deleted only when no inventory items use it.</string>
+    <string name="custom_unit_deleted">Custom unit deleted.</string>
+    <string name="custom_unit_delete_failed">Could not delete the custom unit.</string>
 </resources>

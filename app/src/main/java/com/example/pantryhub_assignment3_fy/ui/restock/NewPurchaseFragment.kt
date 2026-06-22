@@ -1,11 +1,9 @@
 package com.example.pantryhub_assignment3_fy.ui.restock
 
 import android.os.Bundle
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -16,13 +14,14 @@ import com.example.pantryhub_assignment3_fy.databinding.FragmentNewPurchaseBindi
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
 import com.example.pantryhub_assignment3_fy.model.Supplier
+import com.example.pantryhub_assignment3_fy.ui.common.QuantityStepperConfig
 import com.example.pantryhub_assignment3_fy.ui.common.bindFormValue
 import com.example.pantryhub_assignment3_fy.ui.common.observeMemoEditorResult
 import com.example.pantryhub_assignment3_fy.ui.common.openMemoEditor
+import com.example.pantryhub_assignment3_fy.ui.common.showQuantityStepperDialog
 import com.example.pantryhub_assignment3_fy.ui.storage.BarcodeScannerPrototypeFragment
 import com.example.pantryhub_assignment3_fy.ui.storage.CategoryPickerFragment
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import java.time.Instant
 import java.time.ZoneId
@@ -34,6 +33,7 @@ class NewPurchaseFragment : Fragment() {
     private val viewModel: PurchaseEditorViewModel by activityViewModels()
     private val listViewModel: RestockOrdersViewModel by activityViewModels()
     private lateinit var selectedAdapter: PurchaseSelectedItemAdapter
+    private var purchaseSessionInitialized = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentNewPurchaseBinding.inflate(inflater, container, false)
@@ -42,13 +42,19 @@ class NewPurchaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val editingPurchaseId = arguments?.getString(ARG_PURCHASE_ID).orEmpty()
-        if (editingPurchaseId.isNotBlank()) {
-            val order = listViewModel.uiState.value?.restockOrders.orEmpty().firstOrNull { it.id == editingPurchaseId }
-            if (order != null && viewModel.uiState.value?.form?.purchaseId != editingPurchaseId) {
-                viewModel.loadDraftForEdit(order)
+        if (!purchaseSessionInitialized) {
+            if (editingPurchaseId.isNotBlank()) {
+                val order = listViewModel.uiState.value?.restockOrders.orEmpty().firstOrNull { it.id == editingPurchaseId }
+                if (order != null && viewModel.uiState.value?.form?.purchaseId != editingPurchaseId) {
+                    viewModel.loadDraftForEdit(order)
+                }
+            } else if (savedInstanceState == null) {
+                // Reset once when this New Purchase destination is first opened. The same Fragment
+                // instance is reused when supplier/location/item pickers pop back, so their changes
+                // remain in the activity-scoped editor ViewModel and appear in the form.
+                viewModel.startFreshDraft()
             }
-        } else {
-            viewModel.ensureNewPurchaseStarted()
+            purchaseSessionInitialized = true
         }
         selectedAdapter = PurchaseSelectedItemAdapter(
             onEdit = ::editItemQuantity,
@@ -60,7 +66,11 @@ class NewPurchaseFragment : Fragment() {
         binding.formHeader.titleTextView.setText(
             if (editingPurchaseId.isNotBlank()) R.string.edit_restock_item else R.string.new_purchase_order
         )
-        binding.formHeader.closeButton.setOnClickListener { findNavController().popBackStack() }
+        binding.formHeader.closeButton.setOnClickListener {
+            // Discard the unsaved form immediately so no other purchase workflow can observe it.
+            if (editingPurchaseId.isBlank()) viewModel.startFreshDraft()
+            findNavController().popBackStack()
+        }
         binding.supplierRow.setOnClickListener { openSelector(CategoryPickerFragment.FIELD_STOCK_IN_PARTNER) }
         binding.locationRow.setOnClickListener { openSelector(CategoryPickerFragment.FIELD_LOCATION) }
         binding.orderDateRow.setOnClickListener { showDatePicker(isExpectedDate = false) }
@@ -166,7 +176,6 @@ class NewPurchaseFragment : Fragment() {
                         else -> state?.form?.supplierName.orEmpty()
                     }
                 )
-                putString(CategoryPickerFragment.ARG_CURRENT_BRANCH_ID, state?.form?.receivingLocationId.orEmpty())
             }
         )
     }
@@ -204,30 +213,20 @@ class NewPurchaseFragment : Fragment() {
         val inventoryItem = viewModel.uiState.value?.inventoryItems.orEmpty()
             .firstOrNull { it.id == item.inventoryItemId }
             ?: return
-        val input = EditText(requireContext()).apply {
-            setText(item.orderedQuantity.toPurchaseQuantityText())
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+
+        // Reuse the shared stepper dialog so editing an already-selected purchase item
+        // feels the same as selecting it from the purchase item picker.
+        showQuantityStepperDialog(
+            config = QuantityStepperConfig(
+                title = getString(R.string.enter_quantity),
+                initialQuantity = item.orderedQuantity,
+                minimumQuantity = 1.0,
+                unit = item.unit,
+                validationMessage = getString(R.string.enter_valid_quantity)
+            )
+        ) { result ->
+            viewModel.addOrUpdateItem(inventoryItem, result.quantity)
         }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.enter_quantity)
-            .setView(input)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(R.string.save, null)
-            .create()
-            .also { dialog ->
-                dialog.setOnShowListener {
-                    dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        val quantity = input.text?.toString().orEmpty().trim().toDoubleOrNull()
-                        if (quantity == null || quantity <= 0.0) {
-                            input.error = getString(R.string.enter_valid_quantity)
-                        } else {
-                            viewModel.addOrUpdateItem(inventoryItem, quantity)
-                            dialog.dismiss()
-                        }
-                    }
-                }
-            }
-            .show()
     }
 
     override fun onDestroyView() {

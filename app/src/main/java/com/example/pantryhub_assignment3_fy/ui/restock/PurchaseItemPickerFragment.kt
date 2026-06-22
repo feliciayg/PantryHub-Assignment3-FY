@@ -94,7 +94,7 @@ class PurchaseItemPickerFragment : Fragment() {
             SortOption.RESTOCK_URGENCY,
             SortOption.EXPIRY_SOONEST,
             SortOption.RECENTLY_UPDATED
-        ).map { RadioSheetOption(it.name, it.label) }
+        ).map { RadioSheetOption(it.name, getString(it.labelRes)) }
         val current = viewModel.uiState.value?.pickerSortOption ?: SortOption.NAME_ASC
         // Reuses the same sort sheet as the main item list so sorting stays visually consistent.
         showRadioSheet(getString(R.string.sort_items), options, current.name) { selected ->

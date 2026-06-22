@@ -61,7 +61,7 @@
                 <TextView
                     android:id="@+id/partnerValueTextView"
                     style="@style/Widget.InventoryHub.FormRowValue"
-                    android:text="@string/select"
+                    android:text="@string/select_a_partner"
                     android:textColor="@color/inventory_text_secondary" />
 
                 <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />

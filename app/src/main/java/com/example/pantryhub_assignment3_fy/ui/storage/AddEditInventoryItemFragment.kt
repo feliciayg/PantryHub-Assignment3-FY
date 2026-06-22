@@ -19,7 +19,9 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -32,6 +34,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.pantryhub_assignment3_fy.R
+import com.example.pantryhub_assignment3_fy.data.repository.CustomUnitRepository
 import com.example.pantryhub_assignment3_fy.data.repository.RestockOrderRepository
 import com.example.pantryhub_assignment3_fy.databinding.BottomSheetPhotoOptionsBinding
 import com.example.pantryhub_assignment3_fy.databinding.BottomSheetSkuOptionsBinding
@@ -39,13 +42,16 @@ import com.example.pantryhub_assignment3_fy.databinding.DialogEnterSkuBinding
 import com.example.pantryhub_assignment3_fy.databinding.FragmentAddEditInventoryItemBinding
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
+import com.example.pantryhub_assignment3_fy.model.InventoryOption
 import com.example.pantryhub_assignment3_fy.ui.common.QuantityStepperConfig
 import com.example.pantryhub_assignment3_fy.ui.common.showQuantityStepperDialog
 import com.example.pantryhub_assignment3_fy.util.AppLogger
 import com.example.pantryhub_assignment3_fy.util.DateUtils
+import com.example.pantryhub_assignment3_fy.util.loadInventoryImage
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -64,6 +70,7 @@ class AddEditInventoryItemFragment : Fragment() {
     private val skuViewModel: SkuFormViewModel by viewModels()
     private val nameViewModel: ItemNameFormViewModel by viewModels()
     private val quantityUnitViewModel: QuantityUnitFormViewModel by viewModels()
+    private val customUnitViewModel: CustomUnitViewModel by viewModels()
     private val restockOrderRepository = RestockOrderRepository()
     private var mode: String = MODE_ADD
     private var inventoryItemId: String? = null
@@ -101,7 +108,7 @@ class AddEditInventoryItemFragment : Fragment() {
         }
     }
 
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::renderSelectedImage)
     }
 
@@ -142,6 +149,13 @@ class AddEditInventoryItemFragment : Fragment() {
         setupSkuState()
         setupNameState()
         setupQuantityUnitState()
+        customUnitViewModel.uiState.observe(viewLifecycleOwner) { state ->
+            state.errorMessage?.let {
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+                customUnitViewModel.clearError()
+            }
+        }
+        customUnitViewModel.loadUnits()
         binding.saveButton.setOnClickListener { saveInventoryItem() }
         binding.cancelButton.setOnClickListener { findNavController().popBackStack() }
         binding.branchEditText.setOnItemClickListener { _, _, position, _ ->
@@ -157,14 +171,17 @@ class AddEditInventoryItemFragment : Fragment() {
                 val selectedValue = result.getString(CategoryPickerFragment.RESULT_SELECTED_VALUE).orEmpty()
                 val addedValue = result.getString(CategoryPickerFragment.RESULT_ADDED_VALUE).orEmpty()
                 val selectedId = result.getString(CategoryPickerFragment.RESULT_SELECTED_ID).orEmpty()
+                val clearSelection = result.getBoolean(CategoryPickerFragment.RESULT_CLEAR_SELECTION, false)
                 when (fieldType) {
                     CategoryPickerFragment.FIELD_CATEGORY -> {
                         if (addedValue.isNotBlank()) registerPendingCategory(addedValue)
-                        if (selectedValue.isNotBlank()) applyCategorySelection(selectedValue)
+                        if (clearSelection) applyCategorySelection("")
+                        else if (selectedValue.isNotBlank()) applyCategorySelection(selectedValue)
                     }
                     CategoryPickerFragment.FIELD_BRAND -> {
                         if (addedValue.isNotBlank()) registerPendingBrand(addedValue)
-                        if (selectedValue.isNotBlank()) applyBrandSelection(selectedValue)
+                        if (clearSelection) applyBrandSelection("")
+                        else if (selectedValue.isNotBlank()) applyBrandSelection(selectedValue)
                     }
                     CategoryPickerFragment.FIELD_LOCATION -> {
                         if (selectedValue.isNotBlank()) applyLocationSelection(selectedId, selectedValue)
@@ -300,7 +317,6 @@ class AddEditInventoryItemFragment : Fragment() {
                 Bundle().apply {
                     putString(CategoryPickerFragment.ARG_FIELD_TYPE, CategoryPickerFragment.FIELD_LOCATION)
                     putString(CategoryPickerFragment.ARG_CURRENT_CATEGORY, binding.branchEditText.text.toString().trim())
-                    putString(CategoryPickerFragment.ARG_CURRENT_BRANCH_ID, selectedBranchId)
                 }
             )
         }
@@ -450,15 +466,7 @@ class AddEditInventoryItemFragment : Fragment() {
 
     private fun showUnitSheet() {
         val dialog = BottomSheetDialog(requireContext())
-        val container = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
-                resources.getDimensionPixelSize(R.dimen.space_md),
-                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
-                resources.getDimensionPixelSize(R.dimen.space_lg)
-            )
-        }
+        val container = createUnitSheetContainer()
         container.addView(TextView(requireContext()).apply {
             text = getString(R.string.select_unit)
             setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_primary))
@@ -466,7 +474,8 @@ class AddEditInventoryItemFragment : Fragment() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             setPadding(0, 0, 0, resources.getDimensionPixelSize(R.dimen.space_sm))
         })
-        UNIT_OPTIONS.forEach { unit ->
+        val customUnits = customUnitViewModel.uiState.value?.units.orEmpty()
+        (CustomUnitRepository.STANDARD_UNITS + customUnits.map { it.name }).forEach { unit ->
             container.addView(MaterialRadioButton(requireContext()).apply {
                 text = unit
                 isChecked = unit.equals(selectedUnit, ignoreCase = true)
@@ -478,8 +487,167 @@ class AddEditInventoryItemFragment : Fragment() {
                 }
             })
         }
+        container.addView(MaterialButton(requireContext()).apply {
+            text = getString(R.string.add_custom_unit)
+            setIconResource(R.drawable.ic_add)
+            styleUnitActionButton()
+            setOnClickListener {
+                dialog.dismiss()
+                showAddCustomUnitDialog()
+            }
+        })
+        container.addView(MaterialButton(requireContext()).apply {
+            text = getString(R.string.manage_custom_units)
+            setIconResource(R.drawable.ic_settings)
+            styleUnitActionButton()
+            setOnClickListener {
+                dialog.dismiss()
+                showManageCustomUnitsSheet()
+            }
+        })
+        // Keep both management actions reachable on smaller screens.
+        dialog.setContentView(ScrollView(requireContext()).apply { addView(container) })
+        dialog.show()
+    }
+
+    private fun MaterialButton.styleUnitActionButton() {
+        val actionColor = ContextCompat.getColor(requireContext(), R.color.inventory_primary)
+        iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+        setTextColor(actionColor)
+        iconTint = android.content.res.ColorStateList.valueOf(actionColor)
+        backgroundTintList =
+            android.content.res.ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+        elevation = 0f
+    }
+
+    private fun createUnitSheetContainer(): LinearLayout =
+        LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_md),
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_lg)
+            )
+        }
+
+    private fun showAddCustomUnitDialog() {
+        val dialogBinding = DialogEnterSkuBinding.inflate(layoutInflater)
+        dialogBinding.skuInputLayout.hint = getString(R.string.custom_unit_symbol)
+        dialogBinding.skuInputEditText.filters = arrayOf(InputFilter.LengthFilter(12))
+        dialogBinding.skuInputEditText.inputType = InputType.TYPE_CLASS_TEXT
+        dialogBinding.skuInputHelperTextView.text = getString(R.string.custom_unit_helper)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.add_custom_unit)
+            .setView(dialogBinding.root)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.add, null)
+            .create()
+        dialog.setOnShowListener {
+            val addButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            addButton.setOnClickListener {
+                dialogBinding.skuInputLayout.error = null
+                val name = dialogBinding.skuInputEditText.text?.toString().orEmpty().trim()
+                if (name.isBlank()) {
+                    dialogBinding.skuInputLayout.error = getString(R.string.unit_required)
+                    return@setOnClickListener
+                }
+                addButton.isEnabled = false
+                customUnitViewModel.addUnit(name) { result ->
+                    addButton.isEnabled = true
+                    result
+                        .onSuccess { unit ->
+                            quantityUnitViewModel.updateUnit(unit.name)
+                            dialog.dismiss()
+                            Snackbar.make(binding.root, R.string.custom_unit_added, Snackbar.LENGTH_SHORT).show()
+                        }
+                        .onFailure {
+                            dialogBinding.skuInputLayout.error =
+                                it.message ?: getString(R.string.custom_unit_save_failed)
+                        }
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showManageCustomUnitsSheet() {
+        val dialog = BottomSheetDialog(requireContext())
+        val container = createUnitSheetContainer()
+        container.addView(TextView(requireContext()).apply {
+            text = getString(R.string.manage_custom_units)
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_primary))
+            textSize = 20f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, resources.getDimensionPixelSize(R.dimen.space_sm))
+        })
+        val units = customUnitViewModel.uiState.value?.units.orEmpty()
+        if (units.isEmpty()) {
+            container.addView(TextView(requireContext()).apply {
+                text = getString(R.string.no_custom_units)
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_secondary))
+                setPadding(0, resources.getDimensionPixelSize(R.dimen.space_md), 0, resources.getDimensionPixelSize(R.dimen.space_md))
+            })
+        } else {
+            units.forEach { unit -> container.addView(createCustomUnitManagementRow(dialog, unit)) }
+        }
         dialog.setContentView(container)
         dialog.show()
+    }
+
+    private fun createCustomUnitManagementRow(
+        dialog: BottomSheetDialog,
+        unit: InventoryOption
+    ): LinearLayout = LinearLayout(requireContext()).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = android.view.Gravity.CENTER_VERTICAL
+        minimumHeight = resources.getDimensionPixelSize(R.dimen.form_field_height)
+        addView(TextView(requireContext()).apply {
+            text = unit.name
+            textSize = 16f
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_primary))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        addView(ImageButton(requireContext()).apply {
+            setImageResource(R.drawable.ic_delete)
+            contentDescription = getString(R.string.delete_custom_unit, unit.name)
+            setColorFilter(ContextCompat.getColor(requireContext(), R.color.inventory_danger))
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            layoutParams = LinearLayout.LayoutParams(
+                resources.getDimensionPixelSize(R.dimen.items_control_height),
+                resources.getDimensionPixelSize(R.dimen.items_control_height)
+            )
+            setOnClickListener {
+                confirmDeleteCustomUnit(dialog, unit)
+            }
+        })
+    }
+
+    private fun confirmDeleteCustomUnit(dialog: BottomSheetDialog, unit: InventoryOption) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.delete_custom_unit_title, unit.name))
+            .setMessage(R.string.delete_custom_unit_message)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                customUnitViewModel.deleteUnit(unit) { result ->
+                    result
+                        .onSuccess {
+                            if (selectedUnit.equals(unit.name, ignoreCase = true)) {
+                                quantityUnitViewModel.updateUnit(DEFAULT_UNIT)
+                            }
+                            dialog.dismiss()
+                            Snackbar.make(binding.root, R.string.custom_unit_deleted, Snackbar.LENGTH_SHORT).show()
+                        }
+                        .onFailure {
+                            Snackbar.make(
+                                binding.root,
+                                it.message ?: getString(R.string.custom_unit_delete_failed),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                }
+            }
+            .show()
     }
 
     private fun showSkuOptions() {
@@ -562,7 +730,7 @@ class AddEditInventoryItemFragment : Fragment() {
     }
 
     private fun openPhotoPicker() {
-        imagePickerLauncher.launch("image/*")
+        imagePickerLauncher.launch(arrayOf("image/*"))
     }
 
     private fun createImageUri(): Uri {
@@ -576,21 +744,48 @@ class AddEditInventoryItemFragment : Fragment() {
     }
 
     private fun renderSelectedImage(uri: Uri) {
-        selectedImageUri = uri.toString()
-        binding.itemImageView.setImageURI(uri)
+        val stableUri = copyImageToPersistentStorage(uri) ?: uri
+        selectedImageUri = stableUri.toString()
+        binding.itemImageView.setImageURI(stableUri)
         AppLogger.info(
             area = "Items",
             event = "item_image_selected",
-            message = "Item image selected for preview."
+            message = "Item image selected for preview.",
+            "persisted" to (stableUri != uri)
         )
     }
 
     private fun renderSelectedImage(imageUrl: String) {
         selectedImageUri = imageUrl
-        if (imageUrl.isBlank()) {
-            binding.itemImageView.setImageDrawable(null)
-        } else {
-            binding.itemImageView.setImageURI(Uri.parse(imageUrl))
+        binding.itemImageView.loadInventoryImage(imageUrl)
+    }
+
+    private fun copyImageToPersistentStorage(sourceUri: Uri): Uri? {
+        return try {
+            if (sourceUri.scheme == "file" && sourceUri.path?.contains("/item_images/") == true) {
+                return sourceUri
+            }
+            val imagesDir = File(requireContext().filesDir, "item_images").apply { mkdirs() }
+            val extension = when (requireContext().contentResolver.getType(sourceUri)) {
+                "image/png" -> "png"
+                "image/webp" -> "webp"
+                else -> "jpg"
+            }
+            val destination = File(imagesDir, "inventory_item_${System.currentTimeMillis()}.$extension")
+            requireContext().contentResolver.openInputStream(sourceUri)?.use { input ->
+                destination.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            } ?: return null
+            Uri.fromFile(destination)
+        } catch (error: Exception) {
+            AppLogger.warn(
+                area = "Items",
+                event = "item_image_persist_failed",
+                message = "Could not copy selected item image to app storage.",
+                "reason" to error.message
+            )
+            null
         }
     }
 
@@ -1060,25 +1255,18 @@ class AddEditInventoryItemFragment : Fragment() {
     }
 
     private fun categoryDropdownOptions(): List<String> {
-        val baseOptions = FilterOptions.categories.filterNot { it == FilterOptions.ALL_CATEGORY }
         val inventoryOptions = viewModel.uiState.value?.inventoryItems.orEmpty()
             .map { it.category.trim() }
             .filter { it.isNotBlank() }
         val currentValue = binding.categoryEditText.text?.toString().orEmpty().trim()
         val mergedOptions = linkedMapOf<String, String>()
 
-        (baseOptions + inventoryOptions + pendingCategoryOptions + listOf(currentValue))
+        (inventoryOptions + pendingCategoryOptions + listOf(currentValue))
             .filter { it.isNotBlank() }
             .forEach { option ->
                 mergedOptions.putIfAbsent(option.lowercase(), option)
             }
-
-        val orderedBaseOptions = baseOptions.mapNotNull { mergedOptions[it.lowercase()] }
-        val customOptions = mergedOptions
-            .filterKeys { key -> baseOptions.none { it.equals(key, ignoreCase = true) } }
-            .values
-            .sortedBy { it.lowercase() }
-        return orderedBaseOptions + customOptions
+        return mergedOptions.values.sortedBy { it.lowercase() }
     }
 
     private fun refreshBrandSuggestions() {
@@ -1150,7 +1338,6 @@ class AddEditInventoryItemFragment : Fragment() {
         const val MODE_ADD = "add"
         const val MODE_EDIT = "edit"
         private const val DEFAULT_UNIT = QuantityUnitFormViewModel.DEFAULT_UNIT
-        private val UNIT_OPTIONS = listOf("pcs", "box", "pack", "carton", "bottle", "can", "kg", "g", "L", "ml")
         private val SKU_INPUT_PATTERN = Regex("^[A-Z0-9-]+$")
         private val BARCODE_INPUT_PATTERN = Regex("^\\d+$")
         private const val KEY_SELECTED_IMAGE_URI = "selectedImageUri"

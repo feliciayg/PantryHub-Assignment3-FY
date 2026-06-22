@@ -173,7 +173,7 @@
                     <TextView
                         android:id="@+id/categoryValueTextView"
                         style="@style/Widget.InventoryHub.FormRowValue"
-                        android:hint="@string/enter_a_value" />
+                        android:hint="@string/select_a_category" />
 
                     <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
                 </LinearLayout>
@@ -192,7 +192,7 @@
                     <TextView
                         android:id="@+id/brandValueTextView"
                         style="@style/Widget.InventoryHub.FormRowValue"
-                        android:hint="@string/enter_a_value" />
+                        android:hint="@string/select_a_brand" />
 
                     <ImageView style="@style/Widget.InventoryHub.FormRowChevron" />
                 </LinearLayout>

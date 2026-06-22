@@ -39,6 +39,7 @@ class StockInTransactionFragment : Fragment() {
         onRemove = { viewModel.removeItem(it.id) }
     )
     private var startedFresh = false
+    private var prefillApplied = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentStockInTransactionBinding.inflate(inflater, container, false)
@@ -119,6 +120,17 @@ class StockInTransactionFragment : Fragment() {
 
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             bindState(state)
+            if (!prefillApplied) {
+                val itemId = arguments?.getString(ARG_PREFILL_ITEM_ID).orEmpty()
+                val branchId = arguments?.getString(ARG_PREFILL_BRANCH_ID).orEmpty()
+                val branchName = arguments?.getString(ARG_PREFILL_BRANCH_NAME).orEmpty()
+                if (itemId.isBlank()) {
+                    prefillApplied = true
+                } else if (state.inventoryItems.any { it.id == itemId }) {
+                    prefillApplied = true
+                    viewModel.prefillItem(itemId, branchId, branchName)
+                }
+            }
             state.errorMessage?.let {
                 Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
                 viewModel.clearMessages()
@@ -165,7 +177,7 @@ class StockInTransactionFragment : Fragment() {
         binding.locationLabelTextView.text = if (state.mode == TransactionMode.MOVE_STOCK) getString(R.string.from) else getString(R.string.location)
         bindFormValue(binding.locationValueTextView, state.selectedBranch?.name, getString(R.string.select_a_location))
         binding.partnerRow.isVisible = state.mode != TransactionMode.ADJUST_STOCK
-        binding.partnerLabelTextView.text = state.mode.partnerLabel
+        binding.partnerLabelTextView.setText(state.mode.partnerLabelRes)
         bindFormValue(
             binding.partnerValueTextView,
             when (state.mode) {
@@ -174,7 +186,7 @@ class StockInTransactionFragment : Fragment() {
                 TransactionMode.MOVE_STOCK -> state.selectedDestinationBranch?.name
                 TransactionMode.ADJUST_STOCK -> null
             },
-            state.mode.partnerPlaceholder
+            getString(state.mode.partnerPlaceholderRes)
         )
         selectedAdapter.mode = state.mode
         bindFormValue(binding.memoValueTextView, state.memo, getString(R.string.add_a_note))
@@ -296,6 +308,9 @@ class StockInTransactionFragment : Fragment() {
     companion object {
         const val ARG_TRANSACTION_MODE = "transactionMode"
         const val ARG_EDIT_TRANSACTION_ID = "editTransactionId"
+        const val ARG_PREFILL_ITEM_ID = "prefillTransactionItemId"
+        const val ARG_PREFILL_BRANCH_ID = "prefillTransactionBranchId"
+        const val ARG_PREFILL_BRANCH_NAME = "prefillTransactionBranchName"
         const val RESULT_TRANSACTION_UPDATED = "transaction_updated"
     }
 }

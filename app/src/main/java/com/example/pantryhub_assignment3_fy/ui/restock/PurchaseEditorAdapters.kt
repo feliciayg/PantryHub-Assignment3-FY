@@ -1,7 +1,9 @@
 package com.example.pantryhub_assignment3_fy.ui.restock
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -10,6 +12,7 @@ import com.example.pantryhub_assignment3_fy.databinding.ItemStockInPickerBinding
 import com.example.pantryhub_assignment3_fy.databinding.ItemStockInSelectedBinding
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
+import com.example.pantryhub_assignment3_fy.util.StockLevelRules
 import com.example.pantryhub_assignment3_fy.util.loadInventoryImage
 
 class PurchaseSelectedItemAdapter(
@@ -60,14 +63,30 @@ class PurchaseItemPickerAdapter(
         private val binding: ItemStockInPickerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: InventoryItem) {
+            val context = binding.root.context
             binding.imageView.loadInventoryImage(item.imageUrl, R.drawable.ic_storage)
             binding.nameTextView.text = item.name
-            binding.metaTextView.text = listOf(item.category, item.brand, item.sku, item.barcode)
-                .filter { it.isNotBlank() }
-                .take(3)
+            binding.metaTextView.text = listOf(
+                item.category.ifBlank { context.getString(R.string.uncategorised) },
+                item.brand.ifBlank { context.getString(R.string.no_brand) },
+                item.costPrice.toPurchaseMoneyText()
+            )
                 .joinToString(" | ")
-            binding.currentQuantityTextView.text = item.costPrice.toPurchaseMoneyText()
-            binding.addedQuantityTextView.text = item.unit
+            binding.currentQuantityTextView.text = listOf(
+                item.quantity.toPurchaseQuantityText(),
+                item.unit
+            ).filter { it.isNotBlank() }.joinToString(" ")
+            binding.currentQuantityTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    when {
+                        StockLevelRules.isOutOfStock(item) -> R.color.inventory_danger
+                        StockLevelRules.isLowStock(item) -> R.color.inventory_warning
+                        else -> R.color.inventory_primary
+                    }
+                )
+            )
+            binding.addedQuantityTextView.visibility = View.GONE
             binding.root.setOnClickListener { onSelect(item) }
         }
     }

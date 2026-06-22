@@ -145,6 +145,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:text="@string/receiving_location"
+                        android:textColor="@color/inventory_text_secondary"
+                        android:textSize="@dimen/text_size_body" />
+
+                    <TextView
+                        android:id="@+id/receivingLocationTextView"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:textColor="@color/inventory_text_primary"
+                        android:textSize="@dimen/text_size_body"
+                        tools:text="Puchong Branch" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="@string/supplier"
                         android:textColor="@color/inventory_text_secondary"
                         android:textSize="@dimen/text_size_body" />
@@ -288,6 +312,43 @@
                     tools:text="20/50" />
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_sm"
+                android:layout_marginTop="@dimen/space_lg"
+                android:background="@color/inventory_background" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/page_horizontal_padding"
+                android:paddingTop="@dimen/space_lg"
+                android:paddingEnd="@dimen/page_horizontal_padding"
+                android:text="@string/received_items"
+                android:textColor="@color/inventory_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/emptyReceivedItemsTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="@dimen/space_xl"
+                android:paddingBottom="@dimen/space_xl"
+                android:text="@string/no_results_found"
+                android:textColor="@color/inventory_text_secondary" />
+
+            <LinearLayout
+                android:id="@+id/receivedEventsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/page_horizontal_padding"
+                android:paddingTop="@dimen/space_md"
+                android:paddingEnd="@dimen/page_horizontal_padding"
+                android:paddingBottom="@dimen/space_lg" />
+
             <LinearLayout
                 android:id="@+id/totalsCard"
                 android:layout_width="match_parent"
@@ -355,44 +416,6 @@
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/space_sm"
-                android:layout_marginTop="@dimen/space_lg"
-                android:background="@color/inventory_background" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="@dimen/page_horizontal_padding"
-                android:paddingTop="@dimen/space_lg"
-                android:paddingEnd="@dimen/page_horizontal_padding"
-                android:text="@string/received_items"
-                android:textColor="@color/inventory_text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/emptyReceivedItemsTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="@dimen/space_xl"
-                android:paddingBottom="@dimen/space_xl"
-                android:text="@string/no_results_found"
-                android:textColor="@color/inventory_text_secondary" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/receivedEventsRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:paddingStart="@dimen/page_horizontal_padding"
-                android:paddingTop="@dimen/space_md"
-                android:paddingEnd="@dimen/page_horizontal_padding"
-                android:paddingBottom="@dimen/space_xl"
-                tools:listitem="@layout/item_purchase_receiving_event" />
         </LinearLayout>
     </ScrollView>
 

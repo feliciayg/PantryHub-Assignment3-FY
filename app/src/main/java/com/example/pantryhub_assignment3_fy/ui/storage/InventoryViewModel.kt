@@ -1,6 +1,7 @@
 package com.example.pantryhub_assignment3_fy.ui.storage
 
 import android.content.Context
+import android.os.SystemClock
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,7 +17,9 @@ import com.example.pantryhub_assignment3_fy.util.StockLevelRules
 import com.example.pantryhub_assignment3_fy.util.update
 import com.example.pantryhub_assignment3_fy.notification.InventoryReminderScheduler
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * ViewModel for the Inventory page and stock detail/edit flows.
@@ -162,6 +165,17 @@ class InventoryViewModel(
         val status = if (enabled) FilterOptions.IN_STOCK_STATUS else FilterOptions.ALL_STATUS
         _uiState.update {
             val next = it.copy(selectedStatus = status)
+            next.withDerivedInventory()
+        }
+    }
+
+    /**
+     * Clears only the inventory-health filter so the user can return from a Home alert
+     * drill-down without losing the current location, search, grouping, or sort choices.
+     */
+    fun clearStatusFilter() {
+        _uiState.update {
+            val next = it.copy(selectedStatus = FilterOptions.ALL_STATUS)
             next.withDerivedInventory()
         }
     }
@@ -411,64 +425,135 @@ class InventoryViewModel(
 
     fun importInventoryCsv(context: Context, csv: String) {
         viewModelScope.launch {
-            val parsed = InventoryCsv.parseRows(csv)
-            if (parsed.errors.isNotEmpty()) {
-                showError(parsed.errors.joinToString(separator = "\n"))
-                return@launch
-            }
-
-            val existingItems = currentState().inventoryItems.associateBy { it.id }
-            var importedCount = 0
-            var updatedCount = 0
-            val rowErrors = mutableListOf<String>()
-
-            parsed.rows.forEach { row ->
-                val form = row.toInventoryItemForm(existingItems[row.value("id")])
-                if (form == null) {
-                    rowErrors += row.validationError()
-                    return@forEach
+            val startedAt = SystemClock.elapsedRealtime()
+            val mode = "dispatchers_io"
+            AppLogger.info(
+                area = "Items",
+                event = "csv_import_start",
+                message = "Inventory CSV import started.",
+                "mode" to mode,
+                "bytes" to csv.length
+            )
+            val summary = withContext(Dispatchers.IO) {
+                val parsed = InventoryCsv.parseRows(csv)
+                if (parsed.errors.isNotEmpty()) {
+                    AppLogger.warn(
+                        area = "Items",
+                        event = "csv_import_failed",
+                        message = "Inventory CSV import failed during parsing.",
+                        "mode" to mode,
+                        "durationMs" to (SystemClock.elapsedRealtime() - startedAt),
+                        "errors" to parsed.errors.size
+                    )
+                    return@withContext CsvImportSummary(parseErrors = parsed.errors)
                 }
+                AppLogger.debug(
+                    area = "Items",
+                    event = "csv_import_parse_complete",
+                    message = "Inventory CSV parsed.",
+                    "mode" to mode,
+                    "rows" to parsed.rows.size,
+                    "durationMs" to (SystemClock.elapsedRealtime() - startedAt)
+                )
 
-                // CSV import uses id-based matching only: matching ids update existing documents,
-                // missing or unknown ids create new documents with generated Firestore ids.
-                val existing = existingItems[form.id]
-                val result = if (existing != null) {
-                    inventoryRepository.updateInventoryItem(form.toInventoryItem())
-                } else {
-                    inventoryRepository.addInventoryItem(form.toInventoryItem(), receivedFromRestockOrder = false)
-                }
+                val existingItems = currentState().inventoryItems.associateBy { it.id }
+                var importedCount = 0
+                var updatedCount = 0
+                val rowErrors = mutableListOf<String>()
 
-                result
-                    .onSuccess { value ->
-                        val savedItem = if (existing != null) form.toInventoryItem() else form.toInventoryItem().copy(id = value as? String ?: "")
-                        InventoryReminderScheduler.schedule(context, savedItem)
-                        if (existing != null) updatedCount++ else importedCount++
+                parsed.rows.forEach { row ->
+                    val form = row.toInventoryItemForm(existingItems[row.value("id")])
+                    if (form == null) {
+                        rowErrors += row.validationError()
+                        return@forEach
                     }
-                    .onFailure { rowErrors += "Row ${row.rowNumber}: ${it.message ?: "Could not save row."}" }
+
+                    // CSV import uses id-based matching only: matching ids update existing documents,
+                    // missing or unknown ids create new documents with generated Firestore ids.
+                    val existing = existingItems[form.id]
+                    val result = if (existing != null) {
+                        inventoryRepository.updateInventoryItem(form.toInventoryItem())
+                    } else {
+                        inventoryRepository.importInventoryItem(form.toInventoryItem())
+                    }
+
+                    result
+                        .onSuccess { value ->
+                            val savedItem = if (existing != null) form.toInventoryItem() else form.toInventoryItem().copy(id = value as? String ?: "")
+                            InventoryReminderScheduler.schedule(context, savedItem)
+                            if (existing != null) updatedCount++ else importedCount++
+                        }
+                        .onFailure { rowErrors += "Row ${row.rowNumber}: ${it.message ?: "Could not save row."}" }
+                }
+                CsvImportSummary(
+                    rows = parsed.rows.size,
+                    created = importedCount,
+                    updated = updatedCount,
+                    rowErrors = rowErrors
+                )
+            }
+            if (summary.parseErrors.isNotEmpty()) {
+                showError(summary.parseErrors.joinToString(separator = "\n"))
+                return@launch
             }
 
             showCsvSummary(
                 title = "Inventory CSV import summary",
                 message = buildCsvSummaryMessage(
                     counts = listOf(
-                        "Created" to importedCount,
-                        "Updated" to updatedCount,
-                        "Skipped" to rowErrors.size,
-                        "Errors" to rowErrors.size
+                        "Created" to summary.created,
+                        "Updated" to summary.updated,
+                        "Skipped" to summary.rowErrors.size,
+                        "Errors" to summary.rowErrors.size
                     ),
-                    rowErrors = rowErrors
+                    rowErrors = summary.rowErrors
                 )
+            )
+            AppLogger.info(
+                area = "Items",
+                event = "csv_import_success",
+                message = "Inventory CSV import completed.",
+                "mode" to mode,
+                "rows" to summary.rows,
+                "created" to summary.created,
+                "updated" to summary.updated,
+                "skipped" to summary.rowErrors.size,
+                "durationMs" to (SystemClock.elapsedRealtime() - startedAt)
             )
         }
     }
 
     fun importSalesCsv(csv: String) {
         viewModelScope.launch {
+            val startedAt = SystemClock.elapsedRealtime()
+            AppLogger.info(
+                area = "Items",
+                event = "sales_csv_import_start",
+                message = "Sales CSV import started.",
+                "mode" to "main_thread",
+                "bytes" to csv.length
+            )
             val parsed = InventoryCsv.parseSalesRows(csv)
             if (parsed.errors.isNotEmpty()) {
+                AppLogger.warn(
+                    area = "Items",
+                    event = "sales_csv_import_failed",
+                    message = "Sales CSV import failed during parsing.",
+                    "mode" to "main_thread",
+                    "durationMs" to (SystemClock.elapsedRealtime() - startedAt),
+                    "errors" to parsed.errors.size
+                )
                 showError(parsed.errors.joinToString(separator = "\n"))
                 return@launch
             }
+            AppLogger.debug(
+                area = "Items",
+                event = "sales_csv_import_parse_complete",
+                message = "Sales CSV parsed.",
+                "mode" to "main_thread",
+                "rows" to parsed.rows.size,
+                "durationMs" to (SystemClock.elapsedRealtime() - startedAt)
+            )
 
             val inventoryItems = currentState().inventoryItems
             val itemsById = inventoryItems.associateBy { it.id }
@@ -538,6 +623,16 @@ class InventoryViewModel(
                     rowErrors = rowErrors
                 )
             )
+            AppLogger.info(
+                area = "Items",
+                event = "sales_csv_import_success",
+                message = "Sales CSV import completed.",
+                "mode" to "main_thread",
+                "rows" to parsed.rows.size,
+                "deducted" to deductedCount,
+                "skipped" to rowErrors.size,
+                "durationMs" to (SystemClock.elapsedRealtime() - startedAt)
+            )
         }
     }
 
@@ -555,7 +650,8 @@ class InventoryViewModel(
             selectedCategory == FilterOptions.ALL_CATEGORY ||
             selectedCategory.equals("Other", ignoreCase = true)
 
-        // Brand suggestions are derived from existing inventory only; no brand/category records are stored.
+        // Existing inventory is used only to prioritize relevant brands in the picker. The complete
+        // editable brand list is now owned by InventoryOptionRepository.
         return currentState().inventoryItems
             .asSequence()
             .filter { useAllBrands || it.category.equals(selectedCategory, ignoreCase = true) }
@@ -647,7 +743,10 @@ class InventoryViewModel(
             .groupProductRecords()
             .filter { it.isNotEmpty() }
 
-        val rows = if (state.selectedBranch == FilterOptions.ALL_BRANCH) {
+        val showsLocationHealthRows = state.selectedBranch == FilterOptions.ALL_BRANCH &&
+            state.selectedStatus in LOCATION_HEALTH_FILTERS
+
+        val rows = if (state.selectedBranch == FilterOptions.ALL_BRANCH && !showsLocationHealthRows) {
             products.map { records ->
                 val representative = records.representativeProduct()
                 InventoryDisplayRow(
@@ -670,7 +769,8 @@ class InventoryViewModel(
                     }
                 }
                 .filter {
-                    if (selectedBranch != null) it.branchId == selectedBranch.id else it.branchName == state.selectedBranch
+                    state.selectedBranch == FilterOptions.ALL_BRANCH ||
+                        if (selectedBranch != null) it.branchId == selectedBranch.id else it.branchName == state.selectedBranch
                 }
                 .filter { it.shouldShowInStorage(FilterOptions.ALL_STATUS) }
                 .map { realRecord ->
@@ -818,13 +918,23 @@ class InventoryViewModel(
     private fun InventoryDisplayRow.matchesStatusFilter(selectedStatus: String): Boolean {
         if (selectedStatus == FilterOptions.ALL_STATUS) return true
         return when (selectedStatus) {
-            FilterOptions.IN_STOCK_STATUS, "Fresh" -> quantity > StockLevelRules.effectiveReorderPoint(representativeItem)
+            // Low stock is still physically in stock; it is a warning subset of positive stock.
+            FilterOptions.IN_STOCK_STATUS -> quantity > 0.0
             FilterOptions.LOW_STOCK_STATUS -> quantity > 0.0 && quantity <= StockLevelRules.effectiveReorderPoint(representativeItem)
             "Out of Stock" -> quantity <= 0.0
+            "Fresh" -> matchingRecords.any { it.status == InventoryStatus.FRESH.name }
             "Expired" -> matchingRecords.any { it.status == InventoryStatus.EXPIRED.name }
             "Expiring Soon" -> matchingRecords.any { it.status == InventoryStatus.EXPIRING_SOON.name || it.status == InventoryStatus.USE_TODAY.name }
             else -> matchingRecords.any { it.matchesStatusFilter(selectedStatus) }
         }
+    }
+
+    companion object {
+        private val LOCATION_HEALTH_FILTERS = setOf(
+            FilterOptions.LOW_STOCK_STATUS,
+            "Out of Stock",
+            "Expired"
+        )
     }
 
     private fun List<InventoryItem>.representativeProduct(): InventoryItem =
@@ -1051,6 +1161,14 @@ private data class GroupContribution(
     val key: String,
     val displayName: String,
     val row: InventoryDisplayRow
+)
+
+private data class CsvImportSummary(
+    val rows: Int = 0,
+    val created: Int = 0,
+    val updated: Int = 0,
+    val rowErrors: List<String> = emptyList(),
+    val parseErrors: List<String> = emptyList()
 )
 
 private const val NO_EXPIRY_GROUP_KEY = "no-expiry"

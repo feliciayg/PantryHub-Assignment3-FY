@@ -93,6 +93,22 @@ service cloud.firestore {
         allow read, write: if isStaff(storeId);
       }
 
+      match /categories/{categoryId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /brands/{brandId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /inventoryOptionSettings/{settingsId} {
+        allow read, write: if isStaff(storeId);
+      }
+
+      match /units/{unitId} {
+        allow read, write: if isStaff(storeId);
+      }
+
       match /stockMovements/{movementId} {
         allow read, create: if isStaff(storeId);
         allow update, delete: if false;

@@ -327,12 +327,14 @@ class RestockOrderRepository(
                 "Received quantity for ${item.itemName} cannot exceed the remaining order quantity."
             }
 
+            var resolvedInventoryItemId = item.inventoryItemId
             if (quantityReceivedNow > 0.0) {
                 require(item.inventoryItemId.isNotBlank()) {
                     "${item.itemName} is not linked to an inventory item yet."
                 }
                 // Breakpoint: inspect the linked inventory item before stock is increased by receiving.
-                val inventoryItem = inventoryRepository.getInventoryItem(item.inventoryItemId).getOrThrow()
+                val inventoryItem = resolveReceivingInventoryItem(order, item)
+                resolvedInventoryItemId = inventoryItem.id
                 stockMovementRepository.applyManualMovement(
                     inventoryItem = inventoryItem,
                     movementType = StockMovementType.STOCK_IN,
@@ -348,9 +350,9 @@ class RestockOrderRepository(
                     counterpartyType = "SUPPLIER",
                     transactionId = transactionId
                 ).getOrThrow()
-                val afterItem = inventoryRepository.getInventoryItem(item.inventoryItemId).getOrThrow()
+                val afterItem = inventoryRepository.getInventoryItem(inventoryItem.id).getOrThrow()
                 receivingItems += PurchaseReceivingEventItem(
-                    inventoryItemId = item.inventoryItemId,
+                    inventoryItemId = inventoryItem.id,
                     itemName = item.itemName,
                     sku = item.sku,
                     barcode = item.barcode,
@@ -362,7 +364,10 @@ class RestockOrderRepository(
                 )
             }
 
-            updatedItems += item.copy(receivedQuantity = item.receivedQuantity + quantityReceivedNow)
+            updatedItems += item.copy(
+                inventoryItemId = resolvedInventoryItemId,
+                receivedQuantity = item.receivedQuantity + quantityReceivedNow
+            )
         }
 
         require(receivingItems.isNotEmpty()) { "Enter at least one received quantity." }
@@ -391,12 +396,30 @@ class RestockOrderRepository(
             updatedBy = userProfile.uid,
             updatedAt = receivedAt,
             receivedAt = if (nextStatus == RestockStatus.RECEIVED) receivedAt else order.receivedAt,
-            items = updatedItems,
-            receivingEvents = order.receivingEvents + receivingEvent
+            items = updatedItems
         )
 
-        // Breakpoint: inspect the updated order and receiving event before the receive write completes.
-        restockOrdersCollection(storeId).document(orderId).set(updatedOrder.toFirestoreMap()).await()
+        // Read the latest purchase document before saving the receive event so older partial
+        // receive records are kept even when this screen is holding a stale order snapshot.
+        val orderRef = restockOrdersCollection(storeId).document(orderId)
+        firestoreDataSource.db.runTransaction { transaction ->
+            val currentOrder = transaction.get(orderRef).toRestockOrder()
+            val mergedEvents = (currentOrder.receivingEvents + receivingEvent)
+                .distinctBy { it.id.ifBlank { it.linkedStockInTransactionId } }
+                .sortedBy { it.receivedAt }
+            val mergedOrder = updatedOrder.copy(receivingEvents = mergedEvents)
+            transaction.update(orderRef, mergedOrder.toFirestoreMap())
+            AppLogger.info(
+                area = "Purchases",
+                event = "purchase_receiving_events_saved",
+                message = "Saved purchase receive event history.",
+                "order" to order.fallbackOrderLabel,
+                "previousEvents" to currentOrder.receivingEvents.size,
+                "savedEvents" to mergedEvents.size,
+                "newEventItems" to receivingItems.size
+            )
+            null
+        }.await()
         activityRepository.addActivityLog(
             actionType = ActivityActionType.RESTOCK_ORDER_RECEIVED,
             inventoryItemId = order.inventoryItemId,
@@ -409,6 +432,31 @@ class RestockOrderRepository(
             ).joinToString(" - ")
         ).getOrThrow()
         transactionId
+    }
+
+    private suspend fun resolveReceivingInventoryItem(
+        order: RestockOrder,
+        item: PurchaseOrderItem
+    ): InventoryItem {
+        val linkedItem = inventoryRepository.getInventoryItem(item.inventoryItemId).getOrThrow()
+        val receivingLocationId = order.receivingLocationId
+        if (receivingLocationId.isBlank() || linkedItem.branchId == receivingLocationId) {
+            return linkedItem
+        }
+
+        val receivingItem = inventoryRepository.findMatchingInventoryItemForLocation(
+            branchId = receivingLocationId,
+            sku = item.sku,
+            barcode = item.barcode,
+            name = item.itemName,
+            brand = item.brand,
+            category = item.category
+        ).getOrThrow()
+
+        return receivingItem ?: error(
+            "Could not find ${item.itemName} in ${order.receivingLocationName}. " +
+                "Please edit the purchase item after selecting the receiving location."
+        )
     }
 
     private suspend fun savePurchaseDraft(
@@ -631,32 +679,7 @@ class RestockOrderRepository(
         "itemName" to itemName,
         "quantity" to quantity,
         "unit" to unit,
-        "receivingEvents" to receivingEvents.map { event ->
-            mapOf(
-                "id" to event.id,
-                "purchaseOrderId" to event.purchaseOrderId,
-                "purchaseOrderNumber" to event.purchaseOrderNumber,
-                "receivingLocationId" to event.receivingLocationId,
-                "receivingLocationName" to event.receivingLocationName,
-                "receivedAt" to event.receivedAt.toFirestoreDateValue(),
-                "receivedBy" to event.receivedBy,
-                "receivedByName" to event.receivedByName,
-                "linkedStockInTransactionId" to event.linkedStockInTransactionId,
-                "receivedItems" to event.receivedItems.map { item ->
-                    mapOf(
-                        "inventoryItemId" to item.inventoryItemId,
-                        "itemName" to item.itemName,
-                        "sku" to item.sku,
-                        "barcode" to item.barcode,
-                        "receivedQuantity" to item.receivedQuantity,
-                        "unit" to item.unit,
-                        "expiryDate" to item.expiryDate.toFirestoreDateValue(),
-                        "quantityBefore" to item.quantityBefore,
-                        "quantityAfter" to item.quantityAfter
-                    )
-                }
-            )
-        },
+        "receivingEvents" to receivingEvents.map { event -> event.toFirestoreMap() },
         "items" to purchaseItems.map { item ->
             mapOf(
                 "inventoryItemId" to item.inventoryItemId,
@@ -672,6 +695,31 @@ class RestockOrderRepository(
                 "imageUrl" to item.imageUrl,
                 "supplierId" to item.supplierId,
                 "supplierName" to item.supplierName
+            )
+        }
+    )
+
+    private fun PurchaseReceivingEvent.toFirestoreMap(): Map<String, Any?> = mapOf(
+        "id" to id,
+        "purchaseOrderId" to purchaseOrderId,
+        "purchaseOrderNumber" to purchaseOrderNumber,
+        "receivingLocationId" to receivingLocationId,
+        "receivingLocationName" to receivingLocationName,
+        "receivedAt" to receivedAt.toFirestoreDateValue(),
+        "receivedBy" to receivedBy,
+        "receivedByName" to receivedByName,
+        "linkedStockInTransactionId" to linkedStockInTransactionId,
+        "receivedItems" to receivedItems.map { item ->
+            mapOf(
+                "inventoryItemId" to item.inventoryItemId,
+                "itemName" to item.itemName,
+                "sku" to item.sku,
+                "barcode" to item.barcode,
+                "receivedQuantity" to item.receivedQuantity,
+                "unit" to item.unit,
+                "expiryDate" to item.expiryDate.toFirestoreDateValue(),
+                "quantityBefore" to item.quantityBefore,
+                "quantityAfter" to item.quantityAfter
             )
         }
     )

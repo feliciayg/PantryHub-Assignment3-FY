@@ -11,11 +11,13 @@ import com.example.pantryhub_assignment3_fy.data.repository.RestockOrderReposito
 import com.example.pantryhub_assignment3_fy.data.repository.SupplierRepository
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
+import com.example.pantryhub_assignment3_fy.model.PartnerType
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
 import com.example.pantryhub_assignment3_fy.model.RestockOrder
 import com.example.pantryhub_assignment3_fy.model.Supplier
 import com.example.pantryhub_assignment3_fy.ui.storage.SortOption
 import com.example.pantryhub_assignment3_fy.util.AppLogger
+import com.example.pantryhub_assignment3_fy.util.ProductIdentity
 import com.example.pantryhub_assignment3_fy.util.update
 import kotlinx.coroutines.launch
 
@@ -47,23 +49,6 @@ class PurchaseEditorViewModel(
         observeSuppliers()
         observeBranches()
         observeInventory()
-        startFreshDraft()
-    }
-
-    fun ensureNewPurchaseStarted() {
-        val form = _uiState.value?.form ?: return
-        if (form.isEditing) {
-            startFreshDraft()
-            return
-        }
-        if (
-            form.supplierName.isNotBlank() ||
-            form.receivingLocationName.isNotBlank() ||
-            form.memo.isNotBlank() ||
-            form.items.isNotEmpty()
-        ) {
-            return
-        }
         startFreshDraft()
     }
 
@@ -141,7 +126,19 @@ class PurchaseEditorViewModel(
             "branchName" to branch.name
         )
         _uiState.update {
-            it.copy(form = it.form.copy(receivingLocationId = branch.id, receivingLocationName = branch.name))
+            val locationChanged = it.form.receivingLocationId != branch.id
+            it.copy(
+                form = it.form.copy(
+                    receivingLocationId = branch.id,
+                    receivingLocationName = branch.name,
+                    items = if (locationChanged) emptyList() else it.form.items
+                ),
+                successMessage = if (locationChanged && it.form.items.isNotEmpty()) {
+                    "Purchase items were cleared because the receiving location changed."
+                } else {
+                    it.successMessage
+                }
+            )
         }
     }
 
@@ -175,33 +172,36 @@ class PurchaseEditorViewModel(
     }
 
     fun addOrUpdateItem(inventoryItem: InventoryItem, quantity: Double) {
+        val state = _uiState.value ?: return
+        val receivingItem = state.findItemForReceivingLocation(inventoryItem) ?: inventoryItem
         // Tracks item quantity changes so item picker issues can be debugged from Logcat.
         AppLogger.debug(
             area = "PurchaseEditor",
             event = "item_added_or_updated",
             message = "Purchase item quantity saved.",
-            "inventoryItemId" to inventoryItem.id,
-            "itemName" to inventoryItem.name,
+            "inventoryItemId" to receivingItem.id,
+            "itemName" to receivingItem.name,
+            "receivingLocation" to state.form.receivingLocationName,
             "quantity" to quantity
         )
-        _uiState.update { state ->
+        _uiState.update { current ->
             val updatedItems = state.form.items.toMutableList()
-            val existingIndex = updatedItems.indexOfFirst { it.inventoryItemId == inventoryItem.id }
+            val existingIndex = updatedItems.indexOfFirst { it.sameProductAs(receivingItem) }
             val nextLine = PurchaseOrderItem(
-                inventoryItemId = inventoryItem.id,
-                itemName = inventoryItem.name,
-                sku = inventoryItem.sku,
-                barcode = inventoryItem.barcode,
-                brand = inventoryItem.brand,
-                category = inventoryItem.category,
+                inventoryItemId = receivingItem.id,
+                itemName = receivingItem.name,
+                sku = receivingItem.sku,
+                barcode = receivingItem.barcode,
+                brand = receivingItem.brand,
+                category = receivingItem.category,
                 orderedQuantity = quantity,
-                unit = inventoryItem.unit,
-                unitCost = inventoryItem.costPrice,
-                imageUrl = inventoryItem.imageUrl,
-                supplierName = inventoryItem.supplierName
+                unit = receivingItem.unit,
+                unitCost = receivingItem.costPrice,
+                imageUrl = receivingItem.imageUrl,
+                supplierName = receivingItem.supplierName
             )
             if (existingIndex >= 0) updatedItems[existingIndex] = nextLine else updatedItems += nextLine
-            state.copy(form = state.form.copy(items = updatedItems))
+            current.copy(form = current.form.copy(items = updatedItems))
         }
     }
 
@@ -225,7 +225,7 @@ class PurchaseEditorViewModel(
         val item = _uiState.value
             ?.inventoryItems
             .orEmpty()
-            .groupDistinctProducts()
+            .groupDistinctProducts(_uiState.value?.form?.receivingLocationId.orEmpty())
             .firstOrNull { it.barcode.equals(normalized, ignoreCase = true) }
             ?: return false
         addOrUpdateItem(item, 1.0)
@@ -346,7 +346,7 @@ class PurchaseEditorViewModel(
         val state = _uiState.value ?: return emptyList()
         val query = state.pickerQuery.trim()
         return state.inventoryItems
-            .groupDistinctProducts()
+            .groupDistinctProducts(state.form.receivingLocationId)
             .filter { !state.pickerInStockOnly || it.quantity > 0.0 }
             .filter { item ->
                 query.isBlank() ||
@@ -362,7 +362,10 @@ class PurchaseEditorViewModel(
     private fun observeSuppliers() {
         viewModelScope.launch {
             supplierRepository.observeSuppliers().collect { result ->
-                result.onSuccess { suppliers ->
+                result.onSuccess { partners ->
+                    val suppliers = partners.filter {
+                        PartnerType.fromValue(it.partnerType) == PartnerType.SUPPLIER
+                    }
                     _uiState.update { it.copy(suppliers = suppliers, isLoading = false) }
                 }
             }
@@ -403,20 +406,40 @@ class PurchaseEditorViewModel(
     private fun freshPurchaseForm(): PurchaseFormState =
         PurchaseFormState(orderDate = System.currentTimeMillis())
 
-    private fun List<InventoryItem>.groupDistinctProducts(): List<InventoryItem> {
+    private fun List<InventoryItem>.groupDistinctProducts(preferredBranchId: String): List<InventoryItem> {
         val grouped = linkedMapOf<String, InventoryItem>()
         forEach { item ->
-            val key = when {
-                item.sku.isNotBlank() -> "sku:${item.sku.lowercase()}"
-                item.barcode.isNotBlank() -> "barcode:${item.barcode.lowercase()}"
-                else -> "name:${item.name.trim().lowercase()}|brand:${item.brand.trim().lowercase()}"
-            }
+            val key = ProductIdentity.key(item)
             val existing = grouped[key]
-            if (existing == null || item.updatedAt > existing.updatedAt) {
+            if (existing == null || item.shouldReplace(existing, preferredBranchId)) {
                 grouped[key] = item
             }
         }
         return grouped.values.toList()
+    }
+
+    private fun PurchaseEditorUiState.findItemForReceivingLocation(selectedItem: InventoryItem): InventoryItem? =
+        inventoryItems.firstOrNull { item ->
+            item.branchId == form.receivingLocationId && ProductIdentity.sameProduct(item, selectedItem)
+        }
+
+    private fun PurchaseOrderItem.sameProductAs(item: InventoryItem): Boolean =
+        when {
+            sku.isNotBlank() && item.sku.isNotBlank() -> sku.equals(item.sku, ignoreCase = true)
+            barcode.isNotBlank() && item.barcode.isNotBlank() -> barcode.equals(item.barcode, ignoreCase = true)
+            else -> itemName.trim().equals(item.name.trim(), ignoreCase = true) &&
+                brand.trim().equals(item.brand.trim(), ignoreCase = true) &&
+                category.trim().equals(item.category.trim(), ignoreCase = true)
+        }
+
+    private fun InventoryItem.shouldReplace(existing: InventoryItem, preferredBranchId: String): Boolean {
+        val thisIsPreferred = preferredBranchId.isNotBlank() && branchId == preferredBranchId
+        val existingIsPreferred = preferredBranchId.isNotBlank() && existing.branchId == preferredBranchId
+        return when {
+            thisIsPreferred && !existingIsPreferred -> true
+            !thisIsPreferred && existingIsPreferred -> false
+            else -> updatedAt > existing.updatedAt
+        }
     }
 
     private fun SortOption.comparator(): Comparator<InventoryItem> = when (this) {

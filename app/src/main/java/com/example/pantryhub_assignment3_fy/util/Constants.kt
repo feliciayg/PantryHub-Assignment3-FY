@@ -13,6 +13,8 @@ object Constants {
     const val BRANCHES_COLLECTION = "branches"
     const val STOCK_MOVEMENTS_COLLECTION = "stockMovements"
     const val EXPIRY_LOTS_COLLECTION = "expiryLots"
+    const val INVENTORY_OPTION_SETTINGS_COLLECTION = "inventoryOptionSettings"
+    const val UNITS_COLLECTION = "units"
     const val OWNER_ROLE = "owner"
     const val STAFF_ROLE = "staff"
 }

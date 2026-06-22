@@ -1,5 +1,7 @@
 package com.example.pantryhub_assignment3_fy.ui.restock
 
+import androidx.annotation.StringRes
+import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
 import com.example.pantryhub_assignment3_fy.model.RestockOrder
@@ -18,7 +20,7 @@ data class RestockOrdersUiState(
     val searchQuery: String = "",
     val receiveDraft: PurchaseReceiveDraft? = null,
     val receivePickerQuery: String = "",
-    val receiveCompletedMessage: String? = null,
+    val receiveCompletion: PurchaseReceiveCompletion? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null
 )
@@ -40,13 +42,13 @@ data class PurchaseFormState(
         get() = purchaseId.isNotBlank()
 }
 
-enum class PurchaseStatusFilter(val label: String) {
-    ALL("All"),
-    DRAFT("Draft"),
-    ORDERED("Ordered"),
-    PARTIALLY_RECEIVED("Partially Received"),
-    RECEIVED("Received"),
-    CANCELLED("Cancelled")
+enum class PurchaseStatusFilter(@StringRes val labelRes: Int) {
+    ALL(R.string.all),
+    DRAFT(R.string.draft),
+    ORDERED(R.string.ordered),
+    PARTIALLY_RECEIVED(R.string.partially_received),
+    RECEIVED(R.string.received),
+    CANCELLED(R.string.cancelled)
 }
 
 data class PurchaseHistoryFilter(
@@ -84,4 +86,10 @@ data class PurchaseReceiveDraft(
     val memo: String = "",
     val selectedQuantities: Map<String, Double> = emptyMap(),
     val isSubmitting: Boolean = false
+)
+
+data class PurchaseReceiveCompletion(
+    val transactionId: String,
+    val itemCount: Int,
+    val totalQuantity: Double
 )

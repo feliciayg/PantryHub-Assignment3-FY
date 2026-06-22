@@ -62,7 +62,7 @@ class RestockOrdersFragment : Fragment(), ToolbarActionHost {
         )
         tabs.forEach { filter ->
             binding.statusTabLayout.addTab(
-                binding.statusTabLayout.newTab().setText(filter.label)
+                binding.statusTabLayout.newTab().setText(filter.labelRes)
             )
         }
         binding.statusTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {

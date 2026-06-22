@@ -67,6 +67,8 @@
     <string name="scan_or_enter_manually">Imbas atau masukkan secara manual</string>
     <string name="attributes">Atribut</string>
     <string name="enter_a_value">Masukkan nilai</string>
+    <string name="select_a_category">Pilih kategori</string>
+    <string name="select_a_brand">Pilih jenama</string>
     <string name="search_or_enter_value">Cari atau masukkan nilai</string>
     <string name="category">Kategori</string>
     <string name="brand">Jenama</string>
@@ -204,10 +206,13 @@
     <string name="expiry_date">Tarikh Luput</string>
     <string name="select_expiry_date">Pilih tarikh luput</string>
     <string name="clear">Kosongkan</string>
+    <string name="inventory_active_filter">Penapis %1$s aktif · Kembali ke semua item</string>
+    <string name="clear_inventory_filter">Kosongkan penapis status inventori dan lihat semua item</string>
     <string name="expiry_before_transaction_error">Tarikh luput tidak boleh lebih awal daripada tarikh transaksi.</string>
     <string name="no_expiry_date">Tiada tarikh luput</string>
     <string name="expiry_breakdown">Pecahan Luput</string>
     <string name="expiry_summary">Ringkasan Luput</string>
+    <string name="expiry_batches">Kumpulan Tarikh Luput</string>
     <string name="next_expiry">Luput Seterusnya</string>
     <string name="expiring_soon_quantity">Hampir Luput</string>
     <string name="expired_quantity">Kuantiti Luput</string>
@@ -232,6 +237,7 @@
     <string name="order_status">Status Pesanan</string>
     <string name="order_date">Tarikh Pesanan</string>
     <string name="expected_date">Tarikh Dijangka</string>
+    <string name="receiving_location">Lokasi Penerimaan</string>
     <string name="expected_delivery">Penghantaran Dijangka</string>
     <string name="created_by">Dicipta oleh</string>
     <string name="received_items">Item Diterima</string>
@@ -245,6 +251,14 @@
     <string name="place_order">Buat Pesanan</string>
     <string name="save_draft">Simpan Draf</string>
     <string name="purchase_items_summary">%1$d item / %2$s %3$s</string>
+    <string name="purchase_receive_selection_summary">%1$s / %2$s</string>
+    <string name="purchase_receive_success_title">Stok Masuk Berjaya</string>
+    <string name="purchase_receive_success_message">%1$s berjaya dimasukkan ke stok.\nJumlah diterima: %2$s</string>
+    <string name="view_stock_in">Lihat Stok Masuk</string>
+    <plurals name="item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d item</item>
+    </plurals>
     <string name="purchase_edit_only_draft">Hanya pembelian draf boleh diedit sekarang.</string>
     <string name="purchase_delete_only_draft">Hanya pembelian draf boleh dipadam.</string>
     <string name="delete_purchase_message">Padam %1$s? Ini hanya dibenarkan untuk pembelian draf.</string>
@@ -263,7 +277,9 @@
     <string name="edit_customer">Edit Pelanggan</string>
     <string name="supplier_detail">Butiran Pembekal</string>
     <string name="save_supplier">Simpan Pembekal</string>
-    <string name="select_partner">Pilih Rakan Niaga</string>
+    <string name="select_partner">Pilih rakan niaga</string>
+    <string name="select_a_partner">Pilih rakan niaga</string>
+    <string name="select_a_customer">Pilih pelanggan</string>
     <string name="search_partner">Cari rakan niaga</string>
     <string name="search_or_enter_partner">Cari atau masukkan rakan niaga</string>
     <string name="search_or_enter_customer">Cari atau masukkan pelanggan</string>
@@ -368,6 +384,23 @@
     <string name="share_store_code">Kongsi kod jemputan kedai</string>
     <string name="invite_code_copied">Kod jemputan disalin.</string>
     <string name="share_store_code_message">Sertai %1$s di InventoryHub dengan kod jemputan: %2$s</string>
+    <string name="customers">Pelanggan</string>
+    <string name="all">Semua</string>
+    <string name="sort_quantity_high">Kuantiti: Tinggi ke Rendah</string>
+    <string name="sort_safety_stock_low">Stok Keselamatan: Rendah ke Tinggi</string>
+    <string name="sort_restock_urgency">Keutamaan Stok Semula</string>
+    <string name="sort_recently_updated">Dikemas Kini Terbaru</string>
+    <string name="group_none_all">Tiada (Semua)</string>
+    <string name="group_sort_value_az">Nilai Kumpulan: A-Z</string>
+    <string name="group_sort_value_za">Nilai Kumpulan: Z-A</string>
+    <string name="group_sort_quantity_high">Jumlah Kuantiti: Tinggi ke Rendah</string>
+    <string name="group_sort_quantity_low">Jumlah Kuantiti: Rendah ke Tinggi</string>
+    <string name="group_sort_item_count_high">Bilangan Item: Tinggi ke Rendah</string>
+    <string name="group_sort_item_count_low">Bilangan Item: Rendah ke Tinggi</string>
+    <string name="group_detail_title_format">%1$s: %2$s</string>
+    <string name="empty_restock_orders">Tiada pembelian sepadan dengan paparan ini lagi.</string>
+    <string name="completed">Selesai</string>
+    <string name="unknown_staff">Staf tidak diketahui</string>
 
     <string name="calendar">Kalendar</string>
     <string name="all_dates">Semua Tarikh</string>
@@ -386,4 +419,39 @@
         <item quantity="one">%d item</item>
         <item quantity="other">%d item</item>
     </plurals>
+    <string name="other">Lain-lain</string>
+    <string name="rename">Namakan Semula</string>
+    <string name="no_brand">Tiada jenama</string>
+    <string name="uncategorised">Tidak berkategori</string>
+    <string name="rename_inventory_option">Namakan semula “%1$s”</string>
+    <string name="rename_inventory_option_unused">Pilihan ini tidak digunakan oleh sebarang rekod inventori.</string>
+    <string name="delete_inventory_option">Padam “%1$s”?</string>
+    <string name="delete_unused_inventory_option_message">Pilihan ini tidak digunakan oleh sebarang rekod inventori dan boleh dipadam dengan selamat.</string>
+    <string name="replace_and_delete">Ganti dan Padam</string>
+    <string name="create_replacement_before_delete">Cipta pilihan lain sebelum memadam pilihan ini.</string>
+    <string name="inventory_option_save_failed">Pilihan ini tidak dapat disimpan.</string>
+    <string name="inventory_option_delete_failed">Pilihan ini tidak dapat dipadam.</string>
+    <string name="inventory_option_renamed">Pilihan berjaya dinamakan semula.</string>
+    <string name="inventory_option_deleted">Pilihan berjaya dipadam.</string>
+    <plurals name="rename_inventory_option_usage">
+        <item quantity="one">Ini akan mengemas kini %d rekod inventori yang sedang menggunakan pilihan ini.</item>
+        <item quantity="other">Ini akan mengemas kini %d rekod inventori yang sedang menggunakan pilihan ini.</item>
+    </plurals>
+    <plurals name="replace_inventory_option_usage">
+        <item quantity="one">Pilihan ini digunakan oleh %d rekod inventori. Pilih pengganti sebelum memadam.</item>
+        <item quantity="other">Pilihan ini digunakan oleh %d rekod inventori. Pilih pengganti sebelum memadam.</item>
+    </plurals>
+    <string name="add_custom_unit">Unit tersuai…</string>
+    <string name="manage_custom_units">Urus unit tersuai</string>
+    <string name="custom_unit_symbol">Simbol unit</string>
+    <string name="custom_unit_helper">Masukkan simbol ringkas seperti tray atau roll.</string>
+    <string name="unit_required">Masukkan simbol unit.</string>
+    <string name="custom_unit_added">Unit tersuai telah ditambah.</string>
+    <string name="custom_unit_save_failed">Unit tersuai tidak dapat disimpan.</string>
+    <string name="no_custom_units">Tiada unit tersuai telah ditambah.</string>
+    <string name="delete_custom_unit">Padam %1$s</string>
+    <string name="delete_custom_unit_title">Padam “%1$s”?</string>
+    <string name="delete_custom_unit_message">Unit ini hanya boleh dipadam apabila tiada item inventori menggunakannya.</string>
+    <string name="custom_unit_deleted">Unit tersuai telah dipadam.</string>
+    <string name="custom_unit_delete_failed">Unit tersuai tidak dapat dipadam.</string>
 </resources>

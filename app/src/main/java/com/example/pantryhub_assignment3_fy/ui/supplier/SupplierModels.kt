@@ -1,12 +1,14 @@
 package com.example.pantryhub_assignment3_fy.ui.supplier
 
+import androidx.annotation.StringRes
+import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.model.PartnerType
 import com.example.pantryhub_assignment3_fy.model.Supplier
 
-enum class PartnerTab(val label: String) {
-    ALL("All"),
-    SUPPLIERS("Suppliers"),
-    CUSTOMERS("Customers");
+enum class PartnerTab(@StringRes val labelRes: Int) {
+    ALL(R.string.all),
+    SUPPLIERS(R.string.suppliers),
+    CUSTOMERS(R.string.customers);
 
     fun includes(partner: Supplier): Boolean = when (this) {
         ALL -> true
@@ -21,10 +23,10 @@ enum class PartnerFilterMode {
     FAVORITES_ONLY
 }
 
-enum class PartnerArchiveFilter(val label: String) {
-    ACTIVE("Active"),
-    ARCHIVED("Archived"),
-    ALL("All")
+enum class PartnerArchiveFilter(@StringRes val labelRes: Int) {
+    ACTIVE(R.string.active),
+    ARCHIVED(R.string.archived),
+    ALL(R.string.all)
 }
 
 data class SupplierUiState(

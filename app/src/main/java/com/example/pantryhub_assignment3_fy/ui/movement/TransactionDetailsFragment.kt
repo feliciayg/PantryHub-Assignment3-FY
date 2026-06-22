@@ -72,11 +72,12 @@ class TransactionDetailsFragment : Fragment() {
 
     private fun renderDetails(details: TransactionDetailsUiModel) {
         val color = ContextCompat.getColor(requireContext(), details.colorRes)
-        binding.typeTitleTextView.text = details.title
+        val performedBy = details.performedByName.ifBlank { getString(R.string.unknown_staff) }
+        binding.typeTitleTextView.text = getString(details.titleRes)
         binding.typeTitleTextView.setTextColor(color)
-        binding.statusTextView.text = details.status
-        binding.performedByTextView.text = details.performedByName
-        binding.performedByAvatarTextView.text = details.performedByName.firstOrNull()?.uppercaseChar()?.toString().orEmpty()
+        binding.statusTextView.text = getString(details.statusRes)
+        binding.performedByTextView.text = performedBy
+        binding.performedByAvatarTextView.text = performedBy.firstOrNull()?.uppercaseChar()?.toString().orEmpty()
         binding.performedByAvatarTextView.setTextColor(color)
         binding.headerAccentDivider.setBackgroundColor(color)
         binding.itemsSectionTitleTextView.text = getString(R.string.transaction_items_count, details.itemLines.size)
@@ -110,7 +111,7 @@ class TransactionDetailsFragment : Fragment() {
                 0
             )
             addView(TextView(requireContext()).apply {
-                text = row.label
+                text = getString(row.labelRes)
                 setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_secondary))
                 textSize = 14f
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)

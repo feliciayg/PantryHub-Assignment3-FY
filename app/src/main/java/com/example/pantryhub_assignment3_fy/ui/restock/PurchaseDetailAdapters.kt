@@ -7,11 +7,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.databinding.ItemPurchaseDetailEntryBinding
-import com.example.pantryhub_assignment3_fy.databinding.ItemPurchaseReceivingEventBinding
 import com.example.pantryhub_assignment3_fy.databinding.ItemStockInPickerBinding
 import com.example.pantryhub_assignment3_fy.databinding.ItemStockInSelectedBinding
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
-import com.example.pantryhub_assignment3_fy.model.PurchaseReceivingEvent
 import com.example.pantryhub_assignment3_fy.model.remainingQuantity
 import com.example.pantryhub_assignment3_fy.util.loadInventoryImage
 
@@ -58,34 +56,6 @@ class PurchaseDetailItemsAdapter : ListAdapter<PurchaseOrderItem, PurchaseDetail
                         ?: binding.root.context.getString(R.string.received)
                 }
             }
-        }
-    }
-}
-
-class PurchaseReceivingEventsAdapter(
-    private val onClick: (PurchaseReceivingEvent) -> Unit
-) : ListAdapter<PurchaseReceivingEvent, PurchaseReceivingEventsAdapter.ViewHolder>(PurchaseReceivingEventDiff) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
-        ViewHolder(
-            ItemPurchaseReceivingEventBinding.inflate(LayoutInflater.from(parent.context), parent, false),
-            onClick
-        )
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
-
-    class ViewHolder(
-        private val binding: ItemPurchaseReceivingEventBinding,
-        private val onClick: (PurchaseReceivingEvent) -> Unit
-    ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(event: PurchaseReceivingEvent) {
-            binding.dateTextView.text = event.receivedAt.toPurchaseDateTimeText()
-            val itemCount = event.receivedItems.size
-            val totalQuantity = event.receivedItems.sumOf { it.receivedQuantity }
-            binding.summaryTextView.text = "${itemCount.toPurchaseItemLabel()} / ${totalQuantity.toPurchaseQuantityText()}"
-            binding.root.setOnClickListener { onClick(event) }
         }
     }
 }
@@ -157,14 +127,6 @@ private object PurchaseOrderItemDiff : DiffUtil.ItemCallback<PurchaseOrderItem>(
         oldItem.inventoryItemId == newItem.inventoryItemId && oldItem.itemName == newItem.itemName
 
     override fun areContentsTheSame(oldItem: PurchaseOrderItem, newItem: PurchaseOrderItem): Boolean =
-        oldItem == newItem
-}
-
-private object PurchaseReceivingEventDiff : DiffUtil.ItemCallback<PurchaseReceivingEvent>() {
-    override fun areItemsTheSame(oldItem: PurchaseReceivingEvent, newItem: PurchaseReceivingEvent): Boolean =
-        oldItem.id == newItem.id
-
-    override fun areContentsTheSame(oldItem: PurchaseReceivingEvent, newItem: PurchaseReceivingEvent): Boolean =
         oldItem == newItem
 }
 

@@ -9,7 +9,9 @@ import com.example.pantryhub_assignment3_fy.data.repository.InventoryRepository
 import com.example.pantryhub_assignment3_fy.data.repository.RestockOrderRepository
 import com.example.pantryhub_assignment3_fy.data.repository.SupplierRepository
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
+import com.example.pantryhub_assignment3_fy.model.PartnerType
 import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
+import com.example.pantryhub_assignment3_fy.model.PurchaseReceivingEvent
 import com.example.pantryhub_assignment3_fy.model.RestockOrder
 import com.example.pantryhub_assignment3_fy.model.RestockStatus
 import com.example.pantryhub_assignment3_fy.model.remainingQuantity
@@ -142,7 +144,7 @@ class RestockOrdersViewModel(
                 receivePickerQuery = "",
                 errorMessage = null,
                 successMessage = null,
-                receiveCompletedMessage = null
+                receiveCompletion = null
             )
         }
     }
@@ -175,13 +177,13 @@ class RestockOrdersViewModel(
             it.copy(
                 receiveDraft = null,
                 receivePickerQuery = "",
-                receiveCompletedMessage = null
+                receiveCompletion = null
             )
         }
     }
 
-    fun consumeReceiveCompletedMessage() {
-        _uiState.update { it.copy(receiveCompletedMessage = null) }
+    fun consumeReceiveCompletion() {
+        _uiState.update { it.copy(receiveCompletion = null) }
     }
 
     fun currentReceiveOrder(): RestockOrder? {
@@ -247,7 +249,7 @@ class RestockOrdersViewModel(
                 receiveDraft = draft.copy(isSubmitting = true),
                 errorMessage = null,
                 successMessage = null,
-                receiveCompletedMessage = null
+                receiveCompletion = null
             )
         }
         AppLogger.info(
@@ -258,7 +260,7 @@ class RestockOrdersViewModel(
         )
         viewModelScope.launch {
             restockOrderRepository.receivePurchaseOrder(order.id, draft.selectedQuantities, draft.memo)
-                .onSuccess {
+                .onSuccess { transactionId ->
                     AppLogger.info(
                         area = "Purchases",
                         event = "purchase_partial_receive_success",
@@ -271,7 +273,11 @@ class RestockOrdersViewModel(
                         it.copy(
                             receiveDraft = null,
                             receivePickerQuery = "",
-                            receiveCompletedMessage = "Stocked in"
+                            receiveCompletion = PurchaseReceiveCompletion(
+                                transactionId = transactionId,
+                                itemCount = draft.selectedQuantities.count { entry -> entry.value > 0.0 },
+                                totalQuantity = draft.selectedQuantities.values.sum()
+                            )
                         )
                     }
                 }
@@ -360,8 +366,12 @@ class RestockOrdersViewModel(
         receivePurchase(order, remaining)
     }
 
+    fun receivingEventsForPurchase(order: RestockOrder): List<PurchaseReceivingEvent> {
+        return order.receivingEvents.sortedByDescending { it.receivedAt }
+    }
+
     fun clearMessages() {
-        _uiState.update { it.copy(errorMessage = null, successMessage = null, receiveCompletedMessage = null) }
+        _uiState.update { it.copy(errorMessage = null, successMessage = null, receiveCompletion = null) }
     }
 
     private fun observeRestockOrders() {
@@ -405,7 +415,10 @@ class RestockOrdersViewModel(
     private fun observeSuppliers() {
         viewModelScope.launch {
             supplierRepository.observeSuppliers().collect { result ->
-                result.onSuccess { suppliers ->
+                result.onSuccess { partners ->
+                    val suppliers = partners.filter {
+                        PartnerType.fromValue(it.partnerType) == PartnerType.SUPPLIER
+                    }
                     _uiState.update { it.copy(suppliers = suppliers) }
                 }
             }

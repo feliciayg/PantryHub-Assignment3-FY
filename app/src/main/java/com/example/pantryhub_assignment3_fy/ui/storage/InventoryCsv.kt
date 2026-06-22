@@ -19,15 +19,9 @@ object InventoryCsv {
         "sellingPrice",
         "reorderPoint",
         "maximumStockLevel",
-        "storageLocation",
-        "aisle",
-        "shelf",
         "expiryDate",
         "batchNumber",
         "status",
-        "supplierName",
-        "supplierPhone",
-        "supplierEmail",
         "tags",
         "notes"
     )
@@ -52,15 +46,9 @@ object InventoryCsv {
                         inventoryItem.sellingPrice.toStorageQuantityText(),
                         inventoryItem.reorderPoint.toString(),
                         inventoryItem.maximumStockLevel.toString(),
-                        inventoryItem.storageLocation,
-                        inventoryItem.aisle,
-                        inventoryItem.shelf,
                         inventoryItem.expiryDate.takeIf { it > 0L }?.let(DateUtils::formatInputDate).orEmpty(),
                         inventoryItem.batchNumber,
                         inventoryItem.status,
-                        inventoryItem.supplierName,
-                        inventoryItem.supplierPhone,
-                        inventoryItem.supplierEmail,
                         inventoryItem.tags.joinToString(", "),
                         inventoryItem.notes
                     ).joinToString(",") { it.csvEscaped() }

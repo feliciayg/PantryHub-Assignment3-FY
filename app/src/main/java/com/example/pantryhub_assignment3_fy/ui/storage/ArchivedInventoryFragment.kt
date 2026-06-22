@@ -71,7 +71,7 @@ class ArchivedInventoryFragment : Fragment() {
         val state = viewModel.uiState.value ?: return
         val query = binding.searchEditText.text?.toString().orEmpty().trim()
         binding.locationSelector.text = selectedBranch
-        binding.groupButton.text = groupOption.label
+        binding.groupButton.text = getString(groupOption.labelRes)
 
         val rows = buildArchivedRows(state, query)
         val isGrouped = groupOption != GroupOption.NONE
@@ -126,21 +126,15 @@ class ArchivedInventoryFragment : Fragment() {
 
     private fun showLocationSheet() {
         val state = viewModel.uiState.value ?: InventoryUiState()
-        val archivedItems = state.inventoryItems.filter { it.isArchived }
         val rows = listOf(
             RadioSheetOption(
                 key = FilterOptions.ALL_BRANCH,
-                title = FilterOptions.ALL_BRANCH,
-                subtitle = archivedItems.sumOf { it.quantity }.toStorageQuantityText()
+                title = getString(R.string.all_locations)
             )
         ) + state.branches.map { branch ->
             RadioSheetOption(
                 key = branch.name,
-                title = branch.name,
-                subtitle = archivedItems
-                    .filter { it.branchId == branch.id || it.branchName == branch.name }
-                    .sumOf { it.quantity }
-                    .toStorageQuantityText()
+                title = branch.name
             )
         }
         showRadioSheet(getString(R.string.select_location), rows, selectedBranch) { selected ->
@@ -150,7 +144,7 @@ class ArchivedInventoryFragment : Fragment() {
     }
 
     private fun showGroupSheet() {
-        val options = GroupOption.entries.map { RadioSheetOption(it.name, it.label) }
+        val options = GroupOption.entries.map { RadioSheetOption(it.name, getString(it.labelRes)) }
         showRadioSheet(getString(R.string.group_by), options, groupOption.name) { selected ->
             groupOption = GroupOption.valueOf(selected)
             render()
@@ -159,7 +153,7 @@ class ArchivedInventoryFragment : Fragment() {
 
     private fun showSortSheet() {
         if (groupOption != GroupOption.NONE) {
-            val options = GroupSortOption.entries.map { RadioSheetOption(it.name, it.label) }
+            val options = GroupSortOption.entries.map { RadioSheetOption(it.name, getString(it.labelRes)) }
             showRadioSheet(getString(R.string.sort_items), options, groupSortOption.name) { selected ->
                 groupSortOption = GroupSortOption.valueOf(selected)
                 render()
@@ -174,7 +168,7 @@ class ArchivedInventoryFragment : Fragment() {
             SortOption.SAFETY_STOCK_LOW,
             SortOption.EXPIRY_SOONEST,
             SortOption.RECENTLY_UPDATED
-        ).map { RadioSheetOption(it.name, it.label) }
+        ).map { RadioSheetOption(it.name, getString(it.labelRes)) }
         showRadioSheet(getString(R.string.sort_items), options, sortOption.name) { selected ->
             sortOption = SortOption.valueOf(selected)
             render()

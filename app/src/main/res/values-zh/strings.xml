@@ -67,6 +67,8 @@
     <string name="scan_or_enter_manually">扫描或手动输入</string>
     <string name="attributes">属性</string>
     <string name="enter_a_value">输入值</string>
+    <string name="select_a_category">选择类别</string>
+    <string name="select_a_brand">选择品牌</string>
     <string name="search_or_enter_value">搜索或输入值</string>
     <string name="category">类别</string>
     <string name="brand">品牌</string>
@@ -204,10 +206,13 @@
     <string name="expiry_date">到期日期</string>
     <string name="select_expiry_date">选择到期日期</string>
     <string name="clear">清除</string>
+    <string name="inventory_active_filter">%1$s筛选已启用 · 返回所有物品</string>
+    <string name="clear_inventory_filter">清除库存状态筛选并查看所有物品</string>
     <string name="expiry_before_transaction_error">到期日期不能早于交易日期。</string>
     <string name="no_expiry_date">无到期日期</string>
     <string name="expiry_breakdown">到期明细</string>
     <string name="expiry_summary">到期摘要</string>
+    <string name="expiry_batches">到期批次</string>
     <string name="next_expiry">下一到期</string>
     <string name="expiring_soon_quantity">即将到期</string>
     <string name="expired_quantity">已过期数量</string>
@@ -232,6 +237,7 @@
     <string name="order_status">订单状态</string>
     <string name="order_date">订单日期</string>
     <string name="expected_date">预计日期</string>
+    <string name="receiving_location">收货位置</string>
     <string name="expected_delivery">预计送达</string>
     <string name="created_by">创建者</string>
     <string name="received_items">已收货商品</string>
@@ -245,6 +251,14 @@
     <string name="place_order">下单</string>
     <string name="save_draft">保存草稿</string>
     <string name="purchase_items_summary">%1$d 件商品 / %2$s %3$s</string>
+    <string name="purchase_receive_selection_summary">%1$s / %2$s</string>
+    <string name="purchase_receive_success_title">入库成功</string>
+    <string name="purchase_receive_success_message">%1$s已成功入库。\n本次接收总量：%2$s</string>
+    <string name="view_stock_in">查看入库记录</string>
+    <plurals name="item_count">
+        <item quantity="one">%d 件商品</item>
+        <item quantity="other">%d 件商品</item>
+    </plurals>
     <string name="purchase_edit_only_draft">目前只有草稿采购可以编辑。</string>
     <string name="purchase_delete_only_draft">只有草稿采购可以删除。</string>
     <string name="delete_purchase_message">删除 %1$s？只有草稿采购允许删除。</string>
@@ -263,7 +277,9 @@
     <string name="edit_customer">编辑客户</string>
     <string name="supplier_detail">供应商详情</string>
     <string name="save_supplier">保存供应商</string>
-    <string name="select_partner">选择伙伴</string>
+    <string name="select_partner">选择合作伙伴</string>
+    <string name="select_a_partner">选择合作伙伴</string>
+    <string name="select_a_customer">选择客户</string>
     <string name="search_partner">搜索伙伴</string>
     <string name="search_or_enter_partner">搜索或输入伙伴</string>
     <string name="search_or_enter_customer">搜索或输入客户</string>
@@ -368,6 +384,23 @@
     <string name="share_store_code">分享店铺邀请码</string>
     <string name="invite_code_copied">邀请码已复制。</string>
     <string name="share_store_code_message">使用邀请码 %2$s 加入 InventoryHub 上的 %1$s</string>
+    <string name="customers">客户</string>
+    <string name="all">全部</string>
+    <string name="sort_quantity_high">数量：从高到低</string>
+    <string name="sort_safety_stock_low">安全库存：从低到高</string>
+    <string name="sort_restock_urgency">补货优先级</string>
+    <string name="sort_recently_updated">最近更新</string>
+    <string name="group_none_all">无（全部）</string>
+    <string name="group_sort_value_az">分组值：A-Z</string>
+    <string name="group_sort_value_za">分组值：Z-A</string>
+    <string name="group_sort_quantity_high">总数量：从高到低</string>
+    <string name="group_sort_quantity_low">总数量：从低到高</string>
+    <string name="group_sort_item_count_high">商品数：从高到低</string>
+    <string name="group_sort_item_count_low">商品数：从低到高</string>
+    <string name="group_detail_title_format">%1$s：%2$s</string>
+    <string name="empty_restock_orders">还没有符合此视图的采购。</string>
+    <string name="completed">已完成</string>
+    <string name="unknown_staff">未知员工</string>
 
     <string name="calendar">日历</string>
     <string name="all_dates">所有日期</string>
@@ -386,4 +419,39 @@
         <item quantity="one">%d 件商品</item>
         <item quantity="other">%d 件商品</item>
     </plurals>
+    <string name="other">其他</string>
+    <string name="rename">重命名</string>
+    <string name="no_brand">无品牌</string>
+    <string name="uncategorised">未分类</string>
+    <string name="rename_inventory_option">重命名“%1$s”</string>
+    <string name="rename_inventory_option_unused">目前没有库存记录使用此选项。</string>
+    <string name="delete_inventory_option">删除“%1$s”？</string>
+    <string name="delete_unused_inventory_option_message">目前没有库存记录使用此选项，可以安全删除。</string>
+    <string name="replace_and_delete">替换并删除</string>
+    <string name="create_replacement_before_delete">请先创建另一个选项，再删除此选项。</string>
+    <string name="inventory_option_save_failed">无法保存此选项。</string>
+    <string name="inventory_option_delete_failed">无法删除此选项。</string>
+    <string name="inventory_option_renamed">选项已成功重命名。</string>
+    <string name="inventory_option_deleted">选项已成功删除。</string>
+    <plurals name="rename_inventory_option_usage">
+        <item quantity="one">这将更新当前使用此选项的 %d 条库存记录。</item>
+        <item quantity="other">这将更新当前使用此选项的 %d 条库存记录。</item>
+    </plurals>
+    <plurals name="replace_inventory_option_usage">
+        <item quantity="one">此选项正被 %d 条库存记录使用。删除前请选择替代选项。</item>
+        <item quantity="other">此选项正被 %d 条库存记录使用。删除前请选择替代选项。</item>
+    </plurals>
+    <string name="add_custom_unit">自定义单位…</string>
+    <string name="manage_custom_units">管理自定义单位</string>
+    <string name="custom_unit_symbol">单位符号</string>
+    <string name="custom_unit_helper">输入简短符号，例如 tray 或 roll。</string>
+    <string name="unit_required">请输入单位符号。</string>
+    <string name="custom_unit_added">已添加自定义单位。</string>
+    <string name="custom_unit_save_failed">无法保存自定义单位。</string>
+    <string name="no_custom_units">尚未添加自定义单位。</string>
+    <string name="delete_custom_unit">删除 %1$s</string>
+    <string name="delete_custom_unit_title">删除“%1$s”？</string>
+    <string name="delete_custom_unit_message">只有在没有库存物品使用此单位时才能删除。</string>
+    <string name="custom_unit_deleted">已删除自定义单位。</string>
+    <string name="custom_unit_delete_failed">无法删除自定义单位。</string>
 </resources>

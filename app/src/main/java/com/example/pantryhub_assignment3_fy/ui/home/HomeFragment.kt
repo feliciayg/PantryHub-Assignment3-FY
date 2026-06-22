@@ -28,8 +28,8 @@ import com.example.pantryhub_assignment3_fy.ui.storage.BarcodeScannerPrototypeFr
 import com.example.pantryhub_assignment3_fy.ui.storage.FilterOptions
 import com.example.pantryhub_assignment3_fy.ui.storage.InventoryFragment
 import com.example.pantryhub_assignment3_fy.ui.storage.InventoryItemDetailFragment
+import com.example.pantryhub_assignment3_fy.ui.storage.toStorageMoneyText
 import com.google.android.material.snackbar.Snackbar
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -190,8 +190,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun renderInsights(state: HomeUiState) {
-        val currency = NumberFormat.getCurrencyInstance()
-        currency.maximumFractionDigits = 0
         insightsAdapter.submitPages(
             listOf(
                 HomeInsightPage(
@@ -205,7 +203,7 @@ class HomeFragment : Fragment() {
                 ),
                 HomeInsightPage(
                     title = getString(R.string.attention_needed),
-                    subtitle = getString(R.string.inventory_health),
+                    subtitle = "${getString(R.string.inventory_health)} · ${getString(R.string.all_locations)}",
                     metrics = listOf(
                         HomeInsightMetric(
                             value = state.activeLowStockCount.toString(),
@@ -228,8 +226,8 @@ class HomeFragment : Fragment() {
                     title = getString(R.string.inventory_value),
                     subtitle = getString(R.string.inventory_insights_title),
                     metrics = listOf(
-                        HomeInsightMetric(currency.format(state.totalStockCostValue), getString(R.string.cost_value)),
-                        HomeInsightMetric(currency.format(state.totalPotentialSalesValue), getString(R.string.sales_value)),
+                        HomeInsightMetric(state.totalStockCostValue.toStorageMoneyText(), getString(R.string.cost_value)),
+                        HomeInsightMetric(state.totalPotentialSalesValue.toStorageMoneyText(), getString(R.string.sales_value)),
                         HomeInsightMetric(state.activePurchaseCount.toString(), getString(R.string.active_purchases))
                     )
                 )

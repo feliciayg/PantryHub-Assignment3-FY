@@ -43,7 +43,11 @@ class InventoryGroupDetailFragment : Fragment() {
         binding.itemsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.itemsRecyclerView.adapter = adapter
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
-        binding.toolbar.title = "${groupOption.label}: ${requireArguments().getString(ARG_GROUP_TITLE).orEmpty()}"
+        binding.toolbar.title = getString(
+            R.string.group_detail_title_format,
+            getString(groupOption.labelRes),
+            requireArguments().getString(ARG_GROUP_TITLE).orEmpty()
+        )
         binding.inStockChip.setOnCheckedChangeListener { _, isChecked ->
             inStockOnly = isChecked
             render()
@@ -103,7 +107,7 @@ class InventoryGroupDetailFragment : Fragment() {
         })
         options.forEach { option ->
             container.addView(MaterialRadioButton(requireContext()).apply {
-                text = option.label
+                text = getString(option.labelRes)
                 isChecked = option == sortOption
                 minHeight = resources.getDimensionPixelSize(R.dimen.form_field_height)
                 setTextColor(resources.getColor(R.color.inventory_text_primary, requireContext().theme))

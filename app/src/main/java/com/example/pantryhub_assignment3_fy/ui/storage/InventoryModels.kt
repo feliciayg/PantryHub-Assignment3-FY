@@ -1,5 +1,7 @@
 package com.example.pantryhub_assignment3_fy.ui.storage
 
+import androidx.annotation.StringRes
+import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.ExpiryLot
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
@@ -30,10 +32,10 @@ data class InventoryUiState(
     val successMessage: String? = null
 )
 
-enum class ArchiveFilter(val label: String) {
-    ACTIVE("Active"),
-    ARCHIVED("Archived"),
-    ALL("All")
+enum class ArchiveFilter(@StringRes val labelRes: Int) {
+    ACTIVE(R.string.active),
+    ARCHIVED(R.string.archived),
+    ALL(R.string.all)
 }
 
 data class InventoryDisplayRow(
@@ -95,35 +97,35 @@ data class InventoryItemFormData(
     val tags: List<String> = emptyList()
 )
 
-enum class SortOption(val label: String) {
-    EXPIRY_SOONEST("Expiry Date: Soonest First"),
-    NAME_ASC("Name: A-Z"),
-    NAME_DESC("Name: Z-A"),
-    QUANTITY_LOW("Quantity: Low to High"),
-    QUANTITY_HIGH("Quantity: High to Low"),
-    SAFETY_STOCK_LOW("Safety Stock: Low to High"),
-    RESTOCK_URGENCY("Restock Urgency"),
-    RECENTLY_UPDATED("Recently Updated")
+enum class SortOption(@StringRes val labelRes: Int) {
+    EXPIRY_SOONEST(R.string.sort_expiry_soonest),
+    NAME_ASC(R.string.sort_name_az),
+    NAME_DESC(R.string.sort_name_za),
+    QUANTITY_LOW(R.string.sort_quantity_low),
+    QUANTITY_HIGH(R.string.sort_quantity_high),
+    SAFETY_STOCK_LOW(R.string.sort_safety_stock_low),
+    RESTOCK_URGENCY(R.string.sort_restock_urgency),
+    RECENTLY_UPDATED(R.string.sort_recently_updated)
 }
 
-enum class GroupOption(val label: String) {
-    NONE("None (All)"),
-    NAME("Name"),
-    COST("Cost"),
-    PRICE("Price"),
-    CATEGORY("Category"),
-    BRAND("Brand"),
-    SAFETY_STOCK("Safety Stock"),
-    EXPIRY_DATE("Expiry Date")
+enum class GroupOption(@StringRes val labelRes: Int) {
+    NONE(R.string.group_none_all),
+    NAME(R.string.name),
+    COST(R.string.cost),
+    PRICE(R.string.price),
+    CATEGORY(R.string.category),
+    BRAND(R.string.brand),
+    SAFETY_STOCK(R.string.safety_stock),
+    EXPIRY_DATE(R.string.expiry_date)
 }
 
-enum class GroupSortOption(val label: String) {
-    VALUE_ASC("Group Value: A-Z"),
-    VALUE_DESC("Group Value: Z-A"),
-    QUANTITY_HIGH("Total Quantity: High to Low"),
-    QUANTITY_LOW("Total Quantity: Low to High"),
-    ITEM_COUNT_HIGH("Item Count: High to Low"),
-    ITEM_COUNT_LOW("Item Count: Low to High")
+enum class GroupSortOption(@StringRes val labelRes: Int) {
+    VALUE_ASC(R.string.group_sort_value_az),
+    VALUE_DESC(R.string.group_sort_value_za),
+    QUANTITY_HIGH(R.string.group_sort_quantity_high),
+    QUANTITY_LOW(R.string.group_sort_quantity_low),
+    ITEM_COUNT_HIGH(R.string.group_sort_item_count_high),
+    ITEM_COUNT_LOW(R.string.group_sort_item_count_low)
 }
 
 data class GroupSummaryUiModel(

@@ -1,12 +1,11 @@
 package com.example.pantryhub_assignment3_fy.ui.restock
 
+import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -18,6 +17,7 @@ import com.example.pantryhub_assignment3_fy.model.PurchaseOrderItem
 import com.example.pantryhub_assignment3_fy.ui.common.bindFormValue
 import com.example.pantryhub_assignment3_fy.ui.common.observeMemoEditorResult
 import com.example.pantryhub_assignment3_fy.ui.common.openMemoEditor
+import com.example.pantryhub_assignment3_fy.ui.movement.TransactionDetailsViewModel
 import com.google.android.material.snackbar.Snackbar
 
 class PurchaseReceiveFragment : Fragment() {
@@ -33,7 +33,8 @@ class PurchaseReceiveFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val purchaseId = arguments?.getString(ARG_PURCHASE_ID).orEmpty()
-        if (savedInstanceState == null && purchaseId.isNotBlank()) {
+        val currentDraft = viewModel.uiState.value?.receiveDraft
+        if (purchaseId.isNotBlank() && currentDraft?.purchaseId != purchaseId) {
             viewModel.startPartialReceive(purchaseId)
         }
 
@@ -57,12 +58,14 @@ class PurchaseReceiveFragment : Fragment() {
         observeMemoEditorResult(viewModel::updateReceiveMemo)
 
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            state.receiveCompletion?.let(::showReceiveSuccessDialog)
+
             val draft = state.receiveDraft
             val order = viewModel.currentReceiveOrder()
             if (draft == null || order == null) return@observe
 
             bindFormValue(binding.locationValueTextView, draft.locationName, getString(R.string.select_a_location))
-            binding.itemsValueTextView.text = state.receiveSelectionSummary()
+            binding.itemsValueTextView.text = state.receiveSelectionSummary(requireContext())
             bindFormValue(
                 binding.memoValueTextView,
                 draft.memo.ifBlank { viewModel.defaultReceiveMemo(draft.orderLabel) },
@@ -76,16 +79,6 @@ class PurchaseReceiveFragment : Fragment() {
             state.errorMessage?.let {
                 Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
                 viewModel.clearMessages()
-            }
-            state.receiveCompletedMessage?.let {
-                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).apply {
-                    setGravity(Gravity.CENTER, 0, 0)
-                }.show()
-                viewModel.consumeReceiveCompletedMessage()
-                findNavController().previousBackStackEntry
-                    ?.savedStateHandle
-                    ?.set(RESULT_PURCHASE_RECEIVED, true)
-                findNavController().popBackStack()
             }
         }
     }
@@ -104,6 +97,34 @@ class PurchaseReceiveFragment : Fragment() {
         }
     }
 
+    private fun showReceiveSuccessDialog(completion: PurchaseReceiveCompletion) {
+        viewModel.consumeReceiveCompletion()
+        findNavController().previousBackStackEntry
+            ?.savedStateHandle
+            ?.set(RESULT_PURCHASE_RECEIVED, true)
+        val itemLabel = resources.getQuantityString(R.plurals.item_count, completion.itemCount, completion.itemCount)
+        val quantityLabel = completion.totalQuantity.toPurchaseQuantityText()
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.purchase_receive_success_title)
+            .setMessage(getString(R.string.purchase_receive_success_message, itemLabel, quantityLabel))
+            .setPositiveButton(R.string.view_stock_in) { _, _ ->
+                findNavController().popBackStack(R.id.purchaseDetailFragment, false)
+                findNavController().navigate(
+                    R.id.transactionDetailsFragment,
+                    Bundle().apply {
+                        putString(TransactionDetailsViewModel.ARG_TRANSACTION_ID, completion.transactionId)
+                    }
+                )
+            }
+            .setNegativeButton(R.string.done) { _, _ ->
+                findNavController().popBackStack()
+            }
+            .setOnCancelListener {
+                findNavController().popBackStack()
+            }
+            .show()
+    }
+
     override fun onDestroyView() {
         binding.selectedItemsRecyclerView.adapter = null
         _binding = null
@@ -116,13 +137,17 @@ class PurchaseReceiveFragment : Fragment() {
     }
 }
 
-internal fun RestockOrdersUiState.receiveSelectionSummary(): String {
-    val draft = receiveDraft ?: return "0 items / 0"
+internal fun RestockOrdersUiState.receiveSelectionSummary(context: Context): String {
+    val draft = receiveDraft ?: return context.getString(
+        R.string.purchase_receive_selection_summary,
+        context.resources.getQuantityString(R.plurals.item_count, 0, 0),
+        "0"
+    )
     val itemCount = draft.selectedQuantities.count { it.value > 0.0 }
     val totalQuantity = draft.selectedQuantities.values.sum()
-    val itemLabel = if (itemCount == 1) "1 item" else "$itemCount items"
+    val itemLabel = context.resources.getQuantityString(R.plurals.item_count, itemCount, itemCount)
     val quantityLabel = if (totalQuantity % 1.0 == 0.0) totalQuantity.toLong().toString() else totalQuantity.toString()
-    return "$itemLabel / $quantityLabel"
+    return context.getString(R.string.purchase_receive_selection_summary, itemLabel, quantityLabel)
 }
 
 internal fun PurchaseOrderItem.receiveKey(): String =

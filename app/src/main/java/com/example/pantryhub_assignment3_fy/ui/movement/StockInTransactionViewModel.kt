@@ -13,6 +13,7 @@ import com.example.pantryhub_assignment3_fy.data.repository.SupplierRepository
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.Customer
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
+import com.example.pantryhub_assignment3_fy.model.PartnerType
 import com.example.pantryhub_assignment3_fy.model.StockMovementType
 import com.example.pantryhub_assignment3_fy.model.Supplier
 import com.example.pantryhub_assignment3_fy.model.StockMovement
@@ -49,6 +50,8 @@ class StockInTransactionViewModel(
         )
     )
     val uiState: LiveData<StockInTransactionUiState> = _uiState
+    private var legacyCustomers: List<Customer> = emptyList()
+    private var partnerCustomers: List<Customer> = emptyList()
 
     init {
         observeBranches()
@@ -189,6 +192,23 @@ class StockInTransactionViewModel(
         val customer = _uiState.value?.customers.orEmpty().firstOrNull { it.id == customerId }
             ?: Customer(id = customerId, name = customerName)
         selectCustomer(customer)
+    }
+
+    fun prefillItem(inventoryItemId: String, branchId: String, branchName: String): Boolean {
+        if (inventoryItemId.isBlank()) return true
+        val item = _uiState.value?.inventoryItems.orEmpty().firstOrNull { it.id == inventoryItemId }
+            ?: return false
+        // The selected item's branch is the transaction location for Stock In, Stock Out, and
+        // Adjust Stock, and the From location for Move Stock. The destination remains user-selected.
+        selectBranchById(branchId.ifBlank { item.branchId }, branchName.ifBlank { item.branchName })
+        val initialQuantity = when (_uiState.value?.mode) {
+            TransactionMode.ADJUST_STOCK -> item.quantity
+            else -> 1.0
+        }
+        // Reuse the normal selected-line path so the prefilled item behaves exactly like an item
+        // chosen manually from the transaction picker.
+        setItemQuantity(item = item, quantity = initialQuantity)
+        return true
     }
 
     fun setMemo(memo: String) {
@@ -572,8 +592,22 @@ class StockInTransactionViewModel(
         viewModelScope.launch {
             supplierRepository.observeSuppliers().collect { result ->
                 result
-                    .onSuccess { suppliers -> _uiState.update { it.copy(suppliers = suppliers) } }
-                    .onFailure { showError(it.message ?: "Could not load partners.") }
+                    .onSuccess { partners ->
+                        // Stock In receives goods from suppliers; customer partners belong to Stock Out.
+                        val suppliers = partners.filter {
+                            PartnerType.fromValue(it.partnerType) == PartnerType.SUPPLIER
+                        }
+                        partnerCustomers = partners
+                            .filter { PartnerType.fromValue(it.partnerType) == PartnerType.CUSTOMER }
+                            .map { it.toTransactionCustomer() }
+                        _uiState.update {
+                            it.copy(
+                                suppliers = suppliers,
+                                customers = mergedCustomers()
+                            )
+                        }
+                    }
+                    .onFailure { showError(it.message ?: "Could not load suppliers.") }
             }
         }
     }
@@ -582,11 +616,36 @@ class StockInTransactionViewModel(
         viewModelScope.launch {
             customerRepository.observeCustomers().collect { result ->
                 result
-                    .onSuccess { customers -> _uiState.update { it.copy(customers = customers) } }
+                    .onSuccess { customers ->
+                        // Keep older customer documents visible while new customer forms use partnerType.
+                        legacyCustomers = customers
+                        _uiState.update { it.copy(customers = mergedCustomers()) }
+                    }
                     .onFailure { showError(it.message ?: "Could not load customers.") }
             }
         }
     }
+
+    private fun mergedCustomers(): List<Customer> =
+        (partnerCustomers + legacyCustomers)
+            .distinctBy { customer ->
+                customer.name.trim().lowercase().ifBlank { customer.id }
+            }
+            .sortedBy { it.name.lowercase() }
+
+    private fun Supplier.toTransactionCustomer(): Customer = Customer(
+        id = id,
+        name = name,
+        phone = phone,
+        email = email,
+        notes = notes,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        isArchived = isArchived,
+        archivedAt = archivedAt,
+        archivedBy = archivedBy,
+        archiveReason = archiveReason
+    )
 
     private fun observeInventory() {
         viewModelScope.launch {

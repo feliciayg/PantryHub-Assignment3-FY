@@ -2,6 +2,7 @@ package com.example.pantryhub_assignment3_fy.ui.movement
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 
 data class TransactionDetailsUiState(
     val isLoading: Boolean = true,
@@ -13,12 +14,12 @@ data class TransactionDetailsUiState(
 
 data class TransactionDetailsUiModel(
     val transactionId: String,
-    val title: String,
+    @StringRes val titleRes: Int,
     @DrawableRes val iconRes: Int,
     @ColorRes val colorRes: Int,
     val performedByName: String,
     val quantitySummary: String,
-    val status: String,
+    @StringRes val statusRes: Int,
     val transactionRows: List<TransactionDetailRow>,
     val itemLines: List<TransactionItemLineUiModel>,
     val additionalRows: List<TransactionDetailRow>,
@@ -37,7 +38,7 @@ data class TransactionItemLineUiModel(
 )
 
 data class TransactionDetailRow(
-    val label: String,
+    @StringRes val labelRes: Int,
     val value: String,
     @ColorRes val valueColorRes: Int? = null
 )

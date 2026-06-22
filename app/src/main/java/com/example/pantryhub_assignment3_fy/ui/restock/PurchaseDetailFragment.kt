@@ -3,11 +3,15 @@ package com.example.pantryhub_assignment3_fy.ui.restock
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -16,7 +20,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pantryhub_assignment3_fy.R
 import com.example.pantryhub_assignment3_fy.databinding.FragmentPurchaseDetailBinding
+import com.example.pantryhub_assignment3_fy.databinding.ItemPurchaseReceivingEventBinding
 import com.example.pantryhub_assignment3_fy.model.PurchaseReceivingEvent
+import com.example.pantryhub_assignment3_fy.model.PurchaseReceivingEventItem
 import com.example.pantryhub_assignment3_fy.model.RestockOrder
 import com.example.pantryhub_assignment3_fy.model.RestockStatus
 import com.example.pantryhub_assignment3_fy.model.remainingQuantity
@@ -28,7 +34,6 @@ class PurchaseDetailFragment : Fragment() {
     private val binding get() = _binding!!
     private val listViewModel: RestockOrdersViewModel by activityViewModels()
     private lateinit var itemsAdapter: PurchaseDetailItemsAdapter
-    private lateinit var receivingEventsAdapter: PurchaseReceivingEventsAdapter
     private var purchaseId: String = ""
     private var currentTab: PurchaseDetailTab = PurchaseDetailTab.DETAILS
     private var deleteInProgress = false
@@ -41,11 +46,8 @@ class PurchaseDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         purchaseId = arguments?.getString(ARG_PURCHASE_ID).orEmpty()
         itemsAdapter = PurchaseDetailItemsAdapter()
-        receivingEventsAdapter = PurchaseReceivingEventsAdapter(::openReceivingTransaction)
         binding.itemsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.itemsRecyclerView.adapter = itemsAdapter
-        binding.receivedEventsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.receivedEventsRecyclerView.adapter = receivingEventsAdapter
         setupToolbar()
         binding.detailsTabTextView.setOnClickListener { setTab(PurchaseDetailTab.DETAILS) }
         binding.statusTabTextView.setOnClickListener { setTab(PurchaseDetailTab.STATUS) }
@@ -118,6 +120,7 @@ class PurchaseDetailFragment : Fragment() {
         renderStatusChip(order.normalizedStatus)
         binding.orderDateTextView.text = order.orderDate.toPurchaseDateTimeText()
         binding.expectedDateTextView.text = order.expectedDeliveryDate.takeIf { it > 0L }?.let(DateUtils::formatDisplayDate) ?: "-"
+        binding.receivingLocationTextView.text = order.receivingLocationName.ifBlank { "-" }
         binding.supplierTextView.text = order.supplierName.ifBlank { "-" }
         binding.createdByTextView.text = order.createdByName.ifBlank { order.createdBy.ifBlank { "-" } }
 
@@ -132,10 +135,10 @@ class PurchaseDetailFragment : Fragment() {
         binding.statusSummaryQuantityTextView.text =
             "${order.totalReceivedQuantity.toPurchaseQuantityText()}/${order.quantity.toPurchaseQuantityText()}"
 
-        val events = order.receivingEvents.sortedByDescending { it.receivedAt }
-        receivingEventsAdapter.submitList(events)
+        val events = listViewModel.receivingEventsForPurchase(order)
+        renderReceivingEvents(events)
         binding.emptyReceivedItemsTextView.isVisible = events.isEmpty()
-        binding.receivedEventsRecyclerView.isVisible = events.isNotEmpty()
+        binding.receivedEventsContainer.isVisible = events.isNotEmpty()
 
         val canReceive = !order.isArchived &&
             (order.normalizedStatus == RestockStatus.ORDERED || order.normalizedStatus == RestockStatus.PARTIALLY_RECEIVED)
@@ -144,6 +147,88 @@ class PurchaseDetailFragment : Fragment() {
         binding.receiveAllButton.alpha = if (binding.receiveAllButton.isEnabled) 1f else 0.45f
         binding.partiallyReceiveButton.alpha = if (binding.partiallyReceiveButton.isEnabled) 1f else 0.45f
         binding.receiveActionsContainer.isVisible = !order.isArchived
+    }
+
+    private fun renderReceivingEvents(events: List<PurchaseReceivingEvent>) {
+        binding.receivedEventsContainer.removeAllViews()
+        events.forEach { event ->
+            val rowBinding = ItemPurchaseReceivingEventBinding.inflate(
+                layoutInflater,
+                binding.receivedEventsContainer,
+                false
+            )
+            bindReceivingEvent(rowBinding, event)
+            binding.receivedEventsContainer.addView(rowBinding.root)
+        }
+    }
+
+    private fun bindReceivingEvent(
+        rowBinding: ItemPurchaseReceivingEventBinding,
+        event: PurchaseReceivingEvent
+    ) {
+        rowBinding.dateTextView.text = event.receivedAt.toPurchaseDateTimeText()
+        val itemCount = event.receivedItems.size
+        val totalQuantity = event.receivedItems.sumOf { it.receivedQuantity }
+        rowBinding.summaryTextView.text = "${itemCount.toPurchaseItemLabel()} / ${totalQuantity.toPurchaseQuantityText()}"
+        rowBinding.receivedItemsContainer.removeAllViews()
+        rowBinding.receivedItemsContainer.isVisible = event.receivedItems.isNotEmpty()
+        event.receivedItems.forEach { item ->
+            rowBinding.receivedItemsContainer.addView(createReceivedItemRow(item))
+        }
+        rowBinding.root.setOnClickListener { openReceivingTransaction(event) }
+    }
+
+    private fun createReceivedItemRow(item: PurchaseReceivingEventItem): LinearLayout {
+        val context = requireContext()
+        val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, context.dp(8), 0, 0)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val textColumn = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+        textColumn.addView(TextView(context).apply {
+            text = item.itemName.ifBlank { item.sku.ifBlank { item.barcode.ifBlank { "-" } } }
+            setTextColor(ContextCompat.getColor(context, R.color.inventory_text_primary))
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        textColumn.addView(TextView(context).apply {
+            val metaText = listOf(item.sku, item.barcode)
+                .filter { it.isNotBlank() }
+                .joinToString(" | ")
+            val movementText = "${item.quantityBefore.toPurchaseQuantityText()} -> ${item.quantityAfter.toPurchaseQuantityText()}"
+            text = listOf(metaText, movementText)
+                .filter { it.isNotBlank() }
+                .joinToString(" | ")
+            setTextColor(ContextCompat.getColor(context, R.color.inventory_text_secondary))
+            textSize = 13f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+
+        row.addView(textColumn)
+        row.addView(TextView(context).apply {
+            text = "+${item.receivedQuantity.toPurchaseQuantityText()} ${item.unit}".trim()
+            setTextColor(ContextCompat.getColor(context, R.color.transaction_stock_in_blue))
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.END
+        })
+        return row
     }
 
     private fun renderToolbarActions(order: RestockOrder) {
@@ -162,7 +247,7 @@ class PurchaseDetailFragment : Fragment() {
     }
 
     private fun renderStatusChip(status: RestockStatus) {
-        binding.statusChip.text = status.purchaseStatusLabel()
+        binding.statusChip.text = getString(status.purchaseStatusLabelRes())
         binding.statusChip.setChipBackgroundColorResource(status.purchaseStatusBackgroundColorRes())
         binding.statusChip.setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_primary))
     }
@@ -280,7 +365,6 @@ class PurchaseDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         binding.itemsRecyclerView.adapter = null
-        binding.receivedEventsRecyclerView.adapter = null
         _binding = null
         super.onDestroyView()
     }
@@ -289,3 +373,6 @@ class PurchaseDetailFragment : Fragment() {
         const val ARG_PURCHASE_ID = "purchaseId"
     }
 }
+
+private fun android.content.Context.dp(value: Int): Int =
+    (value * resources.displayMetrics.density).toInt()
