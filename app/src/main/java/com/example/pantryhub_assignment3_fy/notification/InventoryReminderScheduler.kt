@@ -29,6 +29,7 @@ object InventoryReminderScheduler {
     const val EXTRA_INVENTORY_ITEM_ID = "extra_inventory_item_id"
     const val EXTRA_INVENTORY_ITEM_NAME = "extra_inventory_item_name"
     const val EXTRA_EXPIRY_DATE = "extra_expiry_date"
+    const val FIXED_REMINDER_DAYS_BEFORE = 1
     private const val REMINDER_HOUR = 9
 
     /**
@@ -64,7 +65,7 @@ object InventoryReminderScheduler {
     }
 
     private fun scheduleLot(context: Context, inventoryItem: InventoryItem, lotId: String, expiryDate: Long) {
-        val reminderAt = calculateReminderTimeMillis(expiryDate, inventoryItem.reminderDaysBefore)
+        val reminderAt = calculateReminderTimeMillis(expiryDate)
         if (reminderAt <= System.currentTimeMillis()) return
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val intent = Intent(context, InventoryReminderReceiver::class.java).apply {
@@ -144,19 +145,17 @@ object InventoryReminderScheduler {
 
     private fun InventoryItem.canHaveReminder(): Boolean {
         val archived = status == InventoryStatus.USED.name || status == InventoryStatus.WASTED.name
-        // A value of 0 means the Add/Edit Inventory Item checkbox is off.
-        return reminderDaysBefore > 0 && id.isNotBlank() && name.isNotBlank() &&
+        return id.isNotBlank() && name.isNotBlank() &&
             expiryLots.any { it.expiryDate != null && it.quantity > 0.0 } && quantity > 0.0 && !archived
     }
 
-    private fun calculateReminderTimeMillis(expiryMillis: Long, reminderDaysBefore: Int): Long {
+    private fun calculateReminderTimeMillis(expiryMillis: Long): Long {
         val zone = ZoneId.systemDefault()
         val expiryDate = Instant.ofEpochMilli(expiryMillis).atZone(zone).toLocalDate()
 
-        // The stored expiry date is a calendar day, so reminders are scheduled at 9 AM on
-        // the user-selected reminder day instead of midnight, which is easier to notice.
+        // InventoryHub uses one consistent policy: notify at 9 AM one day before expiry.
         return expiryDate
-            .minusDays(reminderDaysBefore.coerceAtLeast(0).toLong())
+            .minusDays(FIXED_REMINDER_DAYS_BEFORE.toLong())
             .atTime(LocalTime.of(REMINDER_HOUR, 0))
             .atZone(zone)
             .toInstant()

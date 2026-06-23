@@ -43,6 +43,7 @@ import com.example.pantryhub_assignment3_fy.databinding.FragmentAddEditInventory
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
 import com.example.pantryhub_assignment3_fy.model.InventoryOption
+import com.example.pantryhub_assignment3_fy.notification.InventoryReminderScheduler
 import com.example.pantryhub_assignment3_fy.ui.common.QuantityStepperConfig
 import com.example.pantryhub_assignment3_fy.ui.common.showQuantityStepperDialog
 import com.example.pantryhub_assignment3_fy.util.AppLogger
@@ -1224,7 +1225,7 @@ class AddEditInventoryItemFragment : Fragment() {
             expiryDate = expiryDate,
             batchNumber = existingItem?.batchNumber.orEmpty(),
             shelfLifeDays = existingItem?.shelfLifeDays ?: 0,
-            reminderDaysBefore = existingItem?.reminderDaysBefore ?: 0,
+            reminderDaysBefore = InventoryReminderScheduler.FIXED_REMINDER_DAYS_BEFORE,
             notes = existingItem?.notes.orEmpty(),
             supplierId = selectedSupplierId,
             // Inventory items keep only the supplier link/name; legacy contact snapshots survive edits.
