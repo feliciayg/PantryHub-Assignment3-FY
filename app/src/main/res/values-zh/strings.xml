@@ -373,9 +373,11 @@
     <string name="notifications">通知</string>
     <string name="low_stock_alerts">低库存提醒</string>
     <string name="push_notifications">推送通知</string>
+    <string name="enable_expiry_reminders">启用到期提醒</string>
     <string name="notification_reminders">到期提醒</string>
-    <string name="alert_location">提醒位置</string>
+    <string name="alert_location">提醒地点</string>
     <string name="alert_time">提醒时间</string>
+    <string name="notification_all_locations">所有地点</string>
     <string name="business_information">业务信息</string>
     <string name="registration_number">注册号码</string>
     <string name="store_image">店铺图片</string>

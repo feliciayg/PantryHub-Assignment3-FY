@@ -373,9 +373,11 @@
     <string name="notifications">Pemberitahuan</string>
     <string name="low_stock_alerts">Makluman Stok Rendah</string>
     <string name="push_notifications">Pemberitahuan Tolak</string>
+    <string name="enable_expiry_reminders">Aktifkan Peringatan Luput</string>
     <string name="notification_reminders">Peringatan Luput</string>
-    <string name="alert_location">Lokasi Makluman</string>
-    <string name="alert_time">Masa Makluman</string>
+    <string name="alert_location">Lokasi Peringatan</string>
+    <string name="alert_time">Masa Peringatan</string>
+    <string name="notification_all_locations">Semua Lokasi</string>
     <string name="business_information">Maklumat Perniagaan</string>
     <string name="registration_number">No. Pendaftaran</string>
     <string name="store_image">Imej kedai</string>

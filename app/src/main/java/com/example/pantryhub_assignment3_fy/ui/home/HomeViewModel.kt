@@ -10,7 +10,6 @@ import com.example.pantryhub_assignment3_fy.data.repository.StockMovementReposit
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
 import com.example.pantryhub_assignment3_fy.model.InventoryStatus
 import com.example.pantryhub_assignment3_fy.model.RestockOrder
-import com.example.pantryhub_assignment3_fy.model.RestockStatus
 import com.example.pantryhub_assignment3_fy.model.StockMovement
 import com.example.pantryhub_assignment3_fy.model.StockMovementType
 import com.example.pantryhub_assignment3_fy.util.DateUtils
@@ -133,11 +132,9 @@ class HomeViewModel(
         val todayStockOutQuantity = todayMovements
             .filter { it.movementType in STOCK_OUT_TYPES }
             .sumOf { it.quantity }
-        val activePurchaseCount = latestRestockOrders.count {
-            it.status == RestockStatus.TO_ORDER.name ||
-                it.status == RestockStatus.ORDERED.name ||
-                it.status == RestockStatus.IN_TRANSIT.name
-        }
+        // Reuse the purchase model's normalized workflow so draft, ordered, and partially
+        // received purchases all remain active until they are received or cancelled.
+        val activePurchaseCount = latestRestockOrders.count { it.isOpenOrder() }
         val onHandItems = actionableItems.filter { it.quantity > 0.0 }
         val normalizedQuery = searchQuery.lowercase()
         val searchResults = if (normalizedQuery.isBlank()) {

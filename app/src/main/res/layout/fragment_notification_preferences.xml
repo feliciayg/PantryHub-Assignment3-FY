@@ -28,7 +28,7 @@
         android:paddingStart="@dimen/page_horizontal_padding"
         android:paddingTop="@dimen/space_lg"
         android:paddingEnd="@dimen/page_horizontal_padding"
-        android:text="@string/low_stock_alerts" />
+        android:text="@string/notification_reminders" />
 
     <LinearLayout
         android:id="@+id/reminderToggleRow"
@@ -45,7 +45,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/push_notifications"
+            android:text="@string/enable_expiry_reminders"
             android:textColor="@color/inventory_text_primary"
             android:textSize="@dimen/text_size_body" />
 
@@ -82,7 +82,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/location"
+            android:text="@string/alert_location"
             android:textColor="@color/inventory_text_primary"
             android:textSize="@dimen/text_size_body" />
 

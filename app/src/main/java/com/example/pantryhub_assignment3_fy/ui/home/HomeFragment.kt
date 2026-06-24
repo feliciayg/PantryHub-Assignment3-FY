@@ -45,7 +45,7 @@ class HomeFragment : Fragment() {
     private val insightsAdapter = HomeInsightsAdapter { metric ->
         metric.statusFilter?.let(::navigateToItems)
     }
-    private var searchResults: List<InventoryItem> = emptyList()
+    private var searchSuggestionsByLabel: Map<String, InventoryItem> = emptyMap()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -85,8 +85,11 @@ class HomeFragment : Fragment() {
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
-        binding.searchEditText.setOnItemClickListener { _, _, position, _ ->
-            searchResults.getOrNull(position)?.let(::navigateToInventoryItemDetail)
+        binding.searchEditText.setOnItemClickListener { _, _, _, _ ->
+            // AutoCompleteTextView replaces the query before this callback. The replacement
+            // triggers TextWatcher, so use the stable displayed-label map instead of live results.
+            val selectedLabel = binding.searchEditText.text?.toString().orEmpty()
+            searchSuggestionsByLabel[selectedLabel]?.let(::navigateToInventoryItemDetail)
         }
         binding.searchLayout.setEndIconOnClickListener {
             findNavController().navigate(R.id.barcodeScannerPrototypeFragment)
@@ -236,12 +239,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun renderSearchResults(items: List<InventoryItem>) {
-        searchResults = items
-        val labels = items.map { item ->
-            listOf(item.name, item.sku.takeIf(String::isNotBlank)?.let { "SKU $it" }, item.brand.takeIf(String::isNotBlank))
+        val suggestions = items.associateBy { item ->
+            listOf(
+                item.name,
+                item.sku.takeIf(String::isNotBlank)?.let { "SKU $it" },
+                item.brand.takeIf(String::isNotBlank),
+                item.branchName.takeIf(String::isNotBlank)
+            )
                 .filterNotNull()
                 .joinToString(" · ")
         }
+        // Keep the last displayed map while AutoCompleteTextView completes a selection. Its
+        // TextWatcher may publish an empty result before onItemClick is delivered.
+        if (suggestions.isNotEmpty()) searchSuggestionsByLabel = suggestions
+        val labels = suggestions.keys.toList()
         binding.searchEditText.setAdapter(ArrayAdapter(requireContext(), R.layout.item_dropdown_menu_white, labels))
         if (labels.isNotEmpty() && binding.searchEditText.hasFocus()) binding.searchEditText.showDropDown()
     }

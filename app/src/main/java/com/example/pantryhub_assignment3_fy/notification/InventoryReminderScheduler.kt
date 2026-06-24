@@ -29,8 +29,7 @@ object InventoryReminderScheduler {
     const val EXTRA_INVENTORY_ITEM_ID = "extra_inventory_item_id"
     const val EXTRA_INVENTORY_ITEM_NAME = "extra_inventory_item_name"
     const val EXTRA_EXPIRY_DATE = "extra_expiry_date"
-    const val FIXED_REMINDER_DAYS_BEFORE = 1
-    private const val REMINDER_HOUR = 9
+    const val FIXED_REMINDER_DAYS_BEFORE = 7
 
     /**
      * Creates the notification channel required before Android can show expiry reminders.
@@ -56,7 +55,7 @@ object InventoryReminderScheduler {
             return
         }
 
-        if (!inventoryItem.canHaveReminder()) return
+        if (!inventoryItem.canHaveReminder() || !inventoryItem.isSelectedLocation(context)) return
         ExpiryLotRules.sorted(inventoryItem.expiryLots)
             .filter { it.expiryDate != null && it.quantity > 0.0 }
             .forEach { lot ->
@@ -65,7 +64,7 @@ object InventoryReminderScheduler {
     }
 
     private fun scheduleLot(context: Context, inventoryItem: InventoryItem, lotId: String, expiryDate: Long) {
-        val reminderAt = calculateReminderTimeMillis(expiryDate)
+        val reminderAt = calculateReminderTimeMillis(context, expiryDate)
         if (reminderAt <= System.currentTimeMillis()) return
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val intent = Intent(context, InventoryReminderReceiver::class.java).apply {
@@ -149,14 +148,19 @@ object InventoryReminderScheduler {
             expiryLots.any { it.expiryDate != null && it.quantity > 0.0 } && quantity > 0.0 && !archived
     }
 
-    private fun calculateReminderTimeMillis(expiryMillis: Long): Long {
+    private fun InventoryItem.isSelectedLocation(context: Context): Boolean {
+        val selectedLocations = AppPreferences.notificationLocations(context)
+        return AppPreferences.LOCATION_ALL in selectedLocations || branchId in selectedLocations
+    }
+
+    private fun calculateReminderTimeMillis(context: Context, expiryMillis: Long): Long {
         val zone = ZoneId.systemDefault()
         val expiryDate = Instant.ofEpochMilli(expiryMillis).atZone(zone).toLocalDate()
 
-        // InventoryHub uses one consistent policy: notify at 9 AM one day before expiry.
+        // The reminder day is fixed, while each device can choose its preferred alert hour.
         return expiryDate
             .minusDays(FIXED_REMINDER_DAYS_BEFORE.toLong())
-            .atTime(LocalTime.of(REMINDER_HOUR, 0))
+            .atTime(LocalTime.of(AppPreferences.reminderHour(context), 0))
             .atZone(zone)
             .toInstant()
             .toEpochMilli()

@@ -68,6 +68,15 @@ class NotificationPreferencesFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         renderNotificationRows()
+        rescheduleEnabledReminders()
+    }
+
+    private fun rescheduleEnabledReminders() {
+        if (!AppPreferences.expiryRemindersEnabled(requireContext())) return
+        lifecycleScope.launch {
+            inventoryRepository.observeInventoryItems(includeExpiryLots = true).first()
+                .onSuccess { InventoryReminderScheduler.scheduleAll(requireContext(), it) }
+        }
     }
 
     private fun setupReminderSwitch() {
