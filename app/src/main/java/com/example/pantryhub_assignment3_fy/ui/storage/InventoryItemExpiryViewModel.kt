@@ -57,6 +57,26 @@ class InventoryItemExpiryViewModel(
         _uiState.value = _uiState.value.orEmpty().copy(errorMessage = null)
     }
 
+    fun updateExpiryDate(
+        lot: ExpiryLot,
+        newExpiryDate: Long,
+        items: List<InventoryItem>,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = expiryLotRepository.updateExpiryDate(
+                inventoryItemId = lot.inventoryItemId,
+                currentExpiryDate = lot.expiryDate,
+                newExpiryDate = newExpiryDate
+            )
+            if (result.isSuccess) {
+                loadedSignature = ""
+                loadLots(items)
+            }
+            onResult(result)
+        }
+    }
+
     private fun InventoryItemExpiryUiState?.orEmpty(): InventoryItemExpiryUiState =
         this ?: InventoryItemExpiryUiState()
 }

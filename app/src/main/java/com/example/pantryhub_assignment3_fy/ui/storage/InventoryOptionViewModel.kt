@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pantryhub_assignment3_fy.data.repository.InventoryOptionRepository
+import com.example.pantryhub_assignment3_fy.data.repository.InventoryOptionUsage
 import com.example.pantryhub_assignment3_fy.model.InventoryOption
 import com.example.pantryhub_assignment3_fy.model.InventoryOptionType
 import com.example.pantryhub_assignment3_fy.util.update
@@ -43,6 +44,14 @@ class InventoryOptionViewModel(
 
     fun usageCount(type: InventoryOptionType, name: String, onResult: (Result<Int>) -> Unit) {
         viewModelScope.launch { onResult(repository.usageCount(type, name)) }
+    }
+
+    fun usageDetails(
+        type: InventoryOptionType,
+        name: String,
+        onResult: (Result<InventoryOptionUsage>) -> Unit
+    ) {
+        viewModelScope.launch { onResult(repository.usageDetails(type, name)) }
     }
 
     fun addOption(

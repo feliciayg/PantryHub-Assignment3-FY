@@ -33,11 +33,14 @@ import com.example.pantryhub_assignment3_fy.util.ExpiryLotRules
 import com.example.pantryhub_assignment3_fy.util.ProductIdentity
 import com.example.pantryhub_assignment3_fy.util.loadInventoryImage
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 
 class InventoryItemDetailFragment : Fragment() {
@@ -367,6 +370,11 @@ class InventoryItemDetailFragment : Fragment() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             minimumHeight = resources.getDimensionPixelSize(R.dimen.item_form_row_height)
+            background = selectableItemBackground()
+            isClickable = true
+            isFocusable = true
+            contentDescription = getString(R.string.edit_expiry_batch_description, dateLabel, lot.branchName)
+            setOnClickListener { showExpiryDatePicker(lot) }
             setPadding(
                 resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
                 resources.getDimensionPixelSize(R.dimen.space_sm),
@@ -389,14 +397,79 @@ class InventoryItemDetailFragment : Fragment() {
                 setPadding(0, resources.getDimensionPixelSize(R.dimen.space_xs), 0, 0)
             })
         })
-        row.addView(TextView(requireContext()).apply {
-            text = formatQuantity(lot.quantity)
-            setTextColor(ContextCompat.getColor(requireContext(), lot.expiryColor()))
-            textSize = 15f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        row.addView(LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(TextView(requireContext()).apply {
+                text = formatQuantity(lot.quantity)
+                setTextColor(ContextCompat.getColor(requireContext(), lot.expiryColor()))
+                textSize = 15f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            addView(ImageView(requireContext()).apply {
+                setImageResource(R.drawable.ic_chevron_right)
+                setColorFilter(ContextCompat.getColor(requireContext(), R.color.inventory_text_secondary))
+                layoutParams = LinearLayout.LayoutParams(24, 24).apply {
+                    marginStart = resources.getDimensionPixelSize(R.dimen.space_sm)
+                }
+            })
         })
         binding.expirySummaryRowsContainer.addView(row)
         addThinDivider(binding.expirySummaryRowsContainer)
+    }
+
+    private fun showExpiryDatePicker(lot: ExpiryLot) {
+        val initialDate = lot.expiryDate?.let {
+            Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+        } ?: LocalDate.now()
+        val picker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText(R.string.select_expiry_date)
+            .setSelection(initialDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli())
+            .build()
+        picker.addOnPositiveButtonClickListener { utcMillis ->
+            val selectedDate = Instant.ofEpochMilli(utcMillis)
+                .atZone(ZoneOffset.UTC)
+                .toLocalDate()
+            val localMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            confirmExpiryDateUpdate(lot, localMillis)
+        }
+        picker.show(parentFragmentManager, "expiry_batch_date_picker")
+    }
+
+    private fun confirmExpiryDateUpdate(lot: ExpiryLot, newExpiryDate: Long) {
+        if (lot.expiryDate == newExpiryDate) return
+        val branchName = lot.branchName.ifBlank { getString(R.string.unassigned_branch) }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.update_expiry_date)
+            .setMessage(
+                getString(
+                    R.string.update_expiry_date_confirmation,
+                    DateUtils.formatDisplayDate(newExpiryDate),
+                    formatQuantity(lot.quantity),
+                    branchName
+                )
+            )
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.update_expiry_action) { _, _ ->
+                expiryViewModel.updateExpiryDate(
+                    lot = lot,
+                    newExpiryDate = newExpiryDate,
+                    items = matchingItemSummaries
+                ) { result ->
+                    result
+                        .onSuccess {
+                            Snackbar.make(binding.root, R.string.expiry_date_updated, Snackbar.LENGTH_SHORT).show()
+                        }
+                        .onFailure { error ->
+                            Snackbar.make(
+                                binding.root,
+                                error.message ?: getString(R.string.expiry_date_update_failed),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                }
+            }
+            .show()
     }
 
     private fun addSummaryRow(label: String, value: String, valueColorRes: Int) {

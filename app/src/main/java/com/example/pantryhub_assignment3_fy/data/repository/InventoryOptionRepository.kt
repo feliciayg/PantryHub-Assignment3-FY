@@ -10,6 +10,11 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.tasks.await
 
+data class InventoryOptionUsage(
+    val count: Int,
+    val affectedItems: List<String>
+)
+
 /**
  * Owns category and brand master data and the cross-record updates required by rename/delete.
  *
@@ -55,6 +60,19 @@ class InventoryOptionRepository(
             it.getString(type.inventoryField).orEmpty().equals(name.trim(), ignoreCase = true)
         }
     }
+
+    suspend fun usageDetails(type: InventoryOptionType, name: String): Result<InventoryOptionUsage> =
+        runCatching {
+            val matchingDocuments = matchingInventoryDocuments(currentStoreId(), type, name)
+            InventoryOptionUsage(
+                count = matchingDocuments.size,
+                affectedItems = matchingDocuments.map { document ->
+                    val itemName = document.getString("name").orEmpty().ifBlank { "Unnamed item" }
+                    val branchName = document.getString("branchName").orEmpty()
+                    if (branchName.isBlank()) itemName else "$itemName - $branchName"
+                }.distinct().sorted()
+            )
+        }
 
     suspend fun renameOption(
         type: InventoryOptionType,

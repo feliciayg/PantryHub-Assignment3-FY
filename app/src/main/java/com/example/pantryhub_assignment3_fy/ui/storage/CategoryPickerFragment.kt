@@ -24,6 +24,7 @@ import com.example.pantryhub_assignment3_fy.data.repository.BranchRepository
 import com.example.pantryhub_assignment3_fy.databinding.DialogEnterSkuBinding
 import com.example.pantryhub_assignment3_fy.databinding.FragmentCategoryPickerBinding
 import com.example.pantryhub_assignment3_fy.databinding.ItemInventoryOptionSwipeBinding
+import com.example.pantryhub_assignment3_fy.data.repository.InventoryOptionUsage
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.InventoryOption
 import com.example.pantryhub_assignment3_fy.model.InventoryOptionType
@@ -470,11 +471,11 @@ class CategoryPickerFragment : Fragment() {
     private fun requestDeleteOption(option: CategoryPickerOption) {
         val masterOption = option.masterOption ?: return
         val type = masterOptionType() ?: return
-        optionViewModel.usageCount(type, masterOption.name) { countResult ->
-            countResult
-                .onSuccess { usageCount ->
-                    if (usageCount == 0) showUnusedDeleteConfirmation(type, masterOption)
-                    else showReplacementDeleteDialog(type, masterOption, usageCount)
+        optionViewModel.usageDetails(type, masterOption.name) { usageResult ->
+            usageResult
+                .onSuccess { usage ->
+                    if (usage.count == 0) showUnusedDeleteConfirmation(type, masterOption)
+                    else showReplacementDeleteDialog(type, masterOption, usage)
                 }
                 .onFailure { Snackbar.make(binding.root, it.message.orEmpty(), Snackbar.LENGTH_LONG).show() }
         }
@@ -497,7 +498,7 @@ class CategoryPickerFragment : Fragment() {
     private fun showReplacementDeleteDialog(
         type: InventoryOptionType,
         option: InventoryOption,
-        usageCount: Int
+        usage: InventoryOptionUsage
     ) {
         val replacements = managedOptions
             .filterNot { it.id == option.id }
@@ -517,7 +518,7 @@ class CategoryPickerFragment : Fragment() {
             return
         }
 
-        var selectedIndex = 0
+        var selectedIndex = -1
         val labels = replacements.map {
             if (type == InventoryOptionType.BRAND && it == NO_BRAND_VALUE) {
                 getString(R.string.no_brand)
@@ -529,21 +530,77 @@ class CategoryPickerFragment : Fragment() {
                 it
             }
         }.toTypedArray()
-        MaterialAlertDialogBuilder(requireContext())
+        val affectedItems = affectedItemsText(usage)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.delete_inventory_option, option.name))
             .setMessage(
                 resources.getQuantityString(
                     R.plurals.replace_inventory_option_usage,
-                    usageCount,
-                    usageCount
-                )
+                    usage.count,
+                    usage.count
+                ) + "\n\n" + getString(R.string.affected_inventory_items, affectedItems)
             )
             .setSingleChoiceItems(labels, selectedIndex) { _, which -> selectedIndex = which }
             .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.continue_label, null)
+            .create()
+        dialog.setOnShowListener {
+            val continueButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            continueButton.isEnabled = false
+            dialog.listView.setOnItemClickListener { _, _, position, _ ->
+                selectedIndex = position
+                continueButton.isEnabled = true
+            }
+            continueButton.setOnClickListener {
+                if (selectedIndex < 0) return@setOnClickListener
+                dialog.dismiss()
+                showReplacementDeleteConfirmation(
+                    type = type,
+                    option = option,
+                    replacementName = replacements[selectedIndex],
+                    replacementLabel = labels[selectedIndex],
+                    usage = usage
+                )
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showReplacementDeleteConfirmation(
+        type: InventoryOptionType,
+        option: InventoryOption,
+        replacementName: String,
+        replacementLabel: String,
+        usage: InventoryOptionUsage
+    ) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.confirm_replace_and_delete)
+            .setMessage(
+                getString(
+                    R.string.confirm_inventory_option_replacement,
+                    option.name,
+                    replacementLabel,
+                    usage.count,
+                    affectedItemsText(usage)
+                )
+            )
+            .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.replace_and_delete) { _, _ ->
-                deleteOption(type, option, replacements[selectedIndex])
+                deleteOption(type, option, replacementName)
             }
             .show()
+    }
+
+    private fun affectedItemsText(usage: InventoryOptionUsage): String {
+        val visibleItems = usage.affectedItems.take(MAX_AFFECTED_ITEM_PREVIEW)
+        val remainingCount = usage.affectedItems.size - visibleItems.size
+        return buildString {
+            append(visibleItems.joinToString("\n") { "• $it" })
+            if (remainingCount > 0) {
+                append("\n")
+                append(getString(R.string.more_affected_items, remainingCount))
+            }
+        }
     }
 
     private fun deleteOption(
@@ -642,6 +699,7 @@ class CategoryPickerFragment : Fragment() {
         const val RESULT_SELECTED_ID = "selectedId"
         const val RESULT_ADDED_VALUE = "addedValue"
         const val RESULT_CLEAR_SELECTION = "clearSelection"
+        private const val MAX_AFFECTED_ITEM_PREVIEW = 6
         private const val NO_BRAND_VALUE = ""
         private const val OTHER_CATEGORY_VALUE = "Other"
     }

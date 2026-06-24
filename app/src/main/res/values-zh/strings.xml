@@ -205,6 +205,12 @@
 
     <string name="expiry_date">到期日期</string>
     <string name="select_expiry_date">选择到期日期</string>
+    <string name="update_expiry_date">更新到期日期？</string>
+    <string name="update_expiry_action">更新</string>
+    <string name="update_expiry_date_confirmation">将 %3$s 的 %2$s 设置为 %1$s？库存数量不会改变。</string>
+    <string name="expiry_date_updated">到期日期已更新。</string>
+    <string name="expiry_date_update_failed">无法更新到期日期。</string>
+    <string name="edit_expiry_batch_description">编辑 %2$s 中日期为 %1$s 的到期批次</string>
     <string name="clear">清除</string>
     <string name="inventory_active_filter">%1$s筛选已启用 · 返回所有物品</string>
     <string name="clear_inventory_filter">清除库存状态筛选并查看所有物品</string>
@@ -430,6 +436,11 @@
     <string name="delete_inventory_option">删除“%1$s”？</string>
     <string name="delete_unused_inventory_option_message">目前没有库存记录使用此选项，可以安全删除。</string>
     <string name="replace_and_delete">替换并删除</string>
+    <string name="continue_label">继续</string>
+    <string name="affected_inventory_items">受影响的商品：\n%1$s</string>
+    <string name="more_affected_items">……以及另外 %1$d 项</string>
+    <string name="confirm_replace_and_delete">确认替换</string>
+    <string name="confirm_inventory_option_replacement">“%1$s”将在 %3$d 条库存记录中替换为“%2$s”，然后被删除。\n\n受影响的商品：\n%4$s\n\n此操作无法撤销。</string>
     <string name="create_replacement_before_delete">请先创建另一个选项，再删除此选项。</string>
     <string name="inventory_option_save_failed">无法保存此选项。</string>
     <string name="inventory_option_delete_failed">无法删除此选项。</string>

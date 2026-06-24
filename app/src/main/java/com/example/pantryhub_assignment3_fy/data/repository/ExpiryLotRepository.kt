@@ -87,6 +87,85 @@ class ExpiryLotRepository(
         }.await()
     }
 
+    /** Corrects one branch-level expiry batch without changing the item's total quantity. */
+    suspend fun updateExpiryDate(
+        inventoryItemId: String,
+        currentExpiryDate: Long?,
+        newExpiryDate: Long
+    ): Result<Unit> = runCatching {
+        require(inventoryItemId.isNotBlank()) { "Inventory item is required." }
+        require(newExpiryDate > 0L) { "Select a valid expiry date." }
+
+        val storeId = currentStoreId()
+        val itemReference = inventoryItemsCollection(storeId).document(inventoryItemId)
+        val initialSnapshot = itemReference.get().await()
+        require(initialSnapshot.exists()) { "Inventory item not found." }
+        val initialItem = initialSnapshot.toInventoryItem()
+        val effectiveLots = loadLots(initialItem)
+        val sourceId = lotId(currentExpiryDate)
+        val targetId = lotId(newExpiryDate)
+        if (sourceId == targetId) return@runCatching
+
+        val knownLotsById = effectiveLots.associateBy { it.id }
+        val lotIds = (effectiveLots.map { it.id } + sourceId + targetId).distinct()
+        val lotReferences = lotIds.associateWith {
+            itemReference.collection(Constants.EXPIRY_LOTS_COLLECTION).document(it)
+        }
+        val now = System.currentTimeMillis()
+
+        firestoreDataSource.db.runTransaction { transaction ->
+            val itemSnapshot = transaction.get(itemReference)
+            require(itemSnapshot.exists()) { "Inventory item not found." }
+            val item = itemSnapshot.toInventoryItem()
+            val lots = lotReferences.mapValues { (id, reference) ->
+                val snapshot = transaction.get(reference)
+                snapshot.takeIf { it.exists() }?.toExpiryLot(item.id) ?: knownLotsById[id]
+            }.values.filterNotNull().associateBy { it.id }.toMutableMap()
+
+            val source = lots[sourceId] ?: error("Expiry batch no longer exists.")
+            require(source.quantity > 0.0) { "Expiry batch has no stock." }
+            val existingTarget = lots[targetId]
+            val updatedTarget = source.copy(
+                id = targetId,
+                expiryDate = newExpiryDate,
+                quantity = source.quantity + (existingTarget?.quantity ?: 0.0),
+                receivedAt = listOf(source.receivedAt, existingTarget?.receivedAt ?: 0L)
+                    .filter { it > 0L }
+                    .minOrNull() ?: now,
+                sourceTransactionId = existingTarget?.sourceTransactionId
+                    ?.takeIf { it.isNotBlank() }
+                    ?: source.sourceTransactionId,
+                createdAt = listOf(source.createdAt, existingTarget?.createdAt ?: 0L)
+                    .filter { it > 0L }
+                    .minOrNull() ?: now,
+                updatedAt = now
+            )
+
+            lots.remove(sourceId)
+            lots[targetId] = updatedTarget
+            transaction.delete(lotReferences.getValue(sourceId))
+            transaction.set(lotReferences.getValue(targetId), updatedTarget.toMap())
+
+            val nearestExpiry = lots.values
+                .filter { it.quantity > 0.0 }
+                .mapNotNull { it.expiryDate }
+                .minOrNull()
+            transaction.update(
+                itemReference,
+                parentQuantityUpdates(item, item.quantity, nearestExpiry, now)
+            )
+        }.await()
+
+        AppLogger.info(
+            area = "Expiry",
+            event = "expiry_date_corrected",
+            message = "Expiry batch date corrected without changing stock quantity.",
+            "itemId" to inventoryItemId,
+            "from" to (currentExpiryDate ?: 0L),
+            "to" to newExpiryDate
+        )
+    }
+
     suspend fun addStock(
         inventoryItemId: String,
         quantity: Double,

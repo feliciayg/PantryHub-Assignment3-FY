@@ -116,6 +116,12 @@
     <string name="after_stock_out">After stock out</string>
     <string name="no_expiry_date">No expiry date</string>
     <string name="select_expiry_date">Select expiry date</string>
+    <string name="update_expiry_date">Update expiry date?</string>
+    <string name="update_expiry_action">Update</string>
+    <string name="update_expiry_date_confirmation">Assign %1$s to %2$s in %3$s? The inventory quantity will not change.</string>
+    <string name="expiry_date_updated">Expiry date updated.</string>
+    <string name="expiry_date_update_failed">Could not update the expiry date.</string>
+    <string name="edit_expiry_batch_description">Edit expiry batch dated %1$s in %2$s</string>
     <string name="clear">Clear</string>
     <string name="expiry_before_transaction_error">Expiry date cannot be earlier than the transaction date.</string>
     <string name="remove_item">Remove item</string>
@@ -696,6 +702,11 @@
     <string name="delete_inventory_option">Delete “%1$s”?</string>
     <string name="delete_unused_inventory_option_message">This choice is not used by any inventory records and can be deleted safely.</string>
     <string name="replace_and_delete">Replace and Delete</string>
+    <string name="continue_label">Continue</string>
+    <string name="affected_inventory_items">Affected items:\n%1$s</string>
+    <string name="more_affected_items">…and %1$d more</string>
+    <string name="confirm_replace_and_delete">Confirm replacement</string>
+    <string name="confirm_inventory_option_replacement">“%1$s” will be replaced with “%2$s” in %3$d inventory records, then deleted.\n\nAffected items:\n%4$s\n\nThis action cannot be undone.</string>
     <string name="create_replacement_before_delete">Create another choice before deleting this one.</string>
     <string name="inventory_option_save_failed">Could not save this choice.</string>
     <string name="inventory_option_delete_failed">Could not delete this choice.</string>

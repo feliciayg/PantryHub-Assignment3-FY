@@ -205,6 +205,12 @@
 
     <string name="expiry_date">Tarikh Luput</string>
     <string name="select_expiry_date">Pilih tarikh luput</string>
+    <string name="update_expiry_date">Kemas kini tarikh luput?</string>
+    <string name="update_expiry_action">Kemas kini</string>
+    <string name="update_expiry_date_confirmation">Tetapkan %1$s kepada %2$s di %3$s? Kuantiti inventori tidak akan berubah.</string>
+    <string name="expiry_date_updated">Tarikh luput telah dikemas kini.</string>
+    <string name="expiry_date_update_failed">Tarikh luput tidak dapat dikemas kini.</string>
+    <string name="edit_expiry_batch_description">Edit kelompok luput bertarikh %1$s di %2$s</string>
     <string name="clear">Kosongkan</string>
     <string name="inventory_active_filter">Penapis %1$s aktif · Kembali ke semua item</string>
     <string name="clear_inventory_filter">Kosongkan penapis status inventori dan lihat semua item</string>
@@ -430,6 +436,11 @@
     <string name="delete_inventory_option">Padam “%1$s”?</string>
     <string name="delete_unused_inventory_option_message">Pilihan ini tidak digunakan oleh sebarang rekod inventori dan boleh dipadam dengan selamat.</string>
     <string name="replace_and_delete">Ganti dan Padam</string>
+    <string name="continue_label">Teruskan</string>
+    <string name="affected_inventory_items">Item terlibat:\n%1$s</string>
+    <string name="more_affected_items">…dan %1$d lagi</string>
+    <string name="confirm_replace_and_delete">Sahkan penggantian</string>
+    <string name="confirm_inventory_option_replacement">“%1$s” akan digantikan dengan “%2$s” dalam %3$d rekod inventori, kemudian dipadam.\n\nItem terlibat:\n%4$s\n\nTindakan ini tidak boleh dibuat asal.</string>
     <string name="create_replacement_before_delete">Cipta pilihan lain sebelum memadam pilihan ini.</string>
     <string name="inventory_option_save_failed">Pilihan ini tidak dapat disimpan.</string>
     <string name="inventory_option_delete_failed">Pilihan ini tidak dapat dipadam.</string>
