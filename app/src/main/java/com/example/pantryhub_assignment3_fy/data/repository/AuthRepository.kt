@@ -7,6 +7,7 @@ import com.example.pantryhub_assignment3_fy.util.AppLogger
 import com.example.pantryhub_assignment3_fy.util.Constants
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -109,7 +110,9 @@ class AuthRepository(
                 ).getOrThrow()
             }
 
-            loadUserProfile(uid)?.also {
+            val profile = loadUserProfile(uid)?.let { validateStoreMembership(it) }
+                ?: error("Could not load your InventoryHub profile.")
+            profile.also {
                 // Confirms login succeeded and shows whether the user already belongs to a store.
                 AppLogger.info(
                     area = "Auth",
@@ -118,7 +121,7 @@ class AuthRepository(
                     "uid" to uid,
                     "hasStore" to !it.currentStoreId.isNullOrBlank()
                 )
-            } ?: error("Could not load your InventoryHub profile.")
+            }
         }
             .onFailure { error ->
                 // Stores the login failure details so auth problems can be matched with UI behavior.
@@ -191,6 +194,45 @@ class AuthRepository(
             .get()
             .await()
         return snapshot.toObject(UserProfile::class.java)
+    }
+
+    /**
+     * A store id alone is not enough to enter the workspace: the matching staff document must
+     * still exist. Repair stale links here so store-scoped listeners never open without access.
+     */
+    private suspend fun validateStoreMembership(profile: UserProfile): UserProfile {
+        val storeId = profile.currentStoreId?.takeIf { it.isNotBlank() } ?: return profile
+        val staffReference = firestoreDataSource.db
+            .collection(Constants.STORES_COLLECTION)
+            .document(storeId)
+            .collection(Constants.STAFF_COLLECTION)
+            .document(profile.uid)
+
+        val hasMembership = try {
+            staffReference.get().await().exists()
+        } catch (error: FirebaseFirestoreException) {
+            // The staff rules deny the read when this user's membership document is absent.
+            if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) false else throw error
+        }
+        if (hasMembership) return profile
+
+        firestoreDataSource.db.collection(Constants.USERS_COLLECTION)
+            .document(profile.uid)
+            .update(
+                mapOf(
+                    "currentStoreId" to null,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            )
+            .await()
+        AppLogger.warn(
+            area = "Auth",
+            event = "stale_store_link_cleared",
+            message = "User profile referenced a store without a valid staff membership.",
+            "storeId" to storeId,
+            "uid" to profile.uid
+        )
+        return profile.copy(currentStoreId = null)
     }
 
     private suspend fun createOrUpdateUserProfile(

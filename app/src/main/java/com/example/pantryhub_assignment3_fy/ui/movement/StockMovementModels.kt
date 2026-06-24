@@ -3,6 +3,9 @@ package com.example.pantryhub_assignment3_fy.ui.movement
 import com.example.pantryhub_assignment3_fy.model.Branch
 import com.example.pantryhub_assignment3_fy.model.InventoryItem
 import com.example.pantryhub_assignment3_fy.model.StockMovement
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 data class StockMovementUiState(
     val isLoading: Boolean = true,
@@ -36,6 +39,7 @@ data class TransactionHistoryFilter(
     val dateSelection: TransactionDateSelection? = null,
     val itemId: String = "",
     val itemLabel: String = "",
+    val memberId: String = "",
     val memberName: String = "",
     val partnerName: String = "",
     val locationId: String = "",
@@ -45,6 +49,7 @@ data class TransactionHistoryFilter(
     fun hasActiveFilters(): Boolean {
         return dateSelection != null ||
             itemId.isNotBlank() ||
+            memberId.isNotBlank() ||
             memberName.isNotBlank() ||
             partnerName.isNotBlank() ||
             locationId.isNotBlank() ||
@@ -61,4 +66,26 @@ data class TransactionDateSelection(
 
     val normalizedEndMillis: Long
         get() = maxOf(startMillis, endMillis)
+
+    // MaterialDatePicker returns UTC-midnight values. Convert the represented calendar dates to
+    // local day boundaries before comparing them with locally displayed transaction timestamps.
+    val localStartMillis: Long
+        get() = normalizedStartMillis.toPickerLocalDateStart()
+
+    val localEndExclusiveMillis: Long
+        get() = Instant.ofEpochMilli(normalizedEndMillis)
+            .atZone(ZoneOffset.UTC)
+            .toLocalDate()
+            .plusDays(1)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+    private fun Long.toPickerLocalDateStart(): Long =
+        Instant.ofEpochMilli(this)
+            .atZone(ZoneOffset.UTC)
+            .toLocalDate()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
 }

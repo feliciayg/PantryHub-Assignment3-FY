@@ -29,11 +29,10 @@ class TransactionDetailsAdapter :
             binding.secondaryTextView.text = line.secondaryText
             binding.secondaryTextView.isVisible = line.secondaryText.isNotBlank()
             binding.balanceSummaryTextView.text = line.balanceSummary
-            binding.quantityHighlightTextView.text = if (line.quantityHighlight.startsWith("-") || line.quantityHighlight.startsWith("+")) {
-                line.quantityHighlight
-            } else {
-                "+ ${line.quantityHighlight}"
-            }
+            binding.balanceSummaryTextView.isVisible = line.balanceSummary.isNotBlank()
+            // The ViewModel supplies the correct meaning for each mode. A transfer is a neutral
+            // moved quantity, so the adapter must not automatically present it as stock-in.
+            binding.quantityHighlightTextView.text = line.quantityHighlight
             binding.quantityHighlightTextView.setTextColor(
                 ContextCompat.getColor(binding.root.context, line.accentColorRes)
             )

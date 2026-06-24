@@ -97,7 +97,15 @@ class InventoryItemDetailFragment : Fragment() {
         if (matchingItemSummaries.isEmpty()) return
         matchingItems = matchingItemSummaries.map { item ->
             if (lotsByItemId.containsKey(item.id)) {
-                item.copy(expiryLots = lotsByItemId[item.id].orEmpty())
+                // Older lot documents may not contain branch fields, so inherit them from the
+                // parent inventory record before rendering the multi-location breakdown.
+                val locatedLots = lotsByItemId[item.id].orEmpty().map { lot ->
+                    lot.copy(
+                        branchId = lot.branchId.ifBlank { item.branchId },
+                        branchName = lot.branchName.ifBlank { item.branchName }
+                    )
+                }
+                item.copy(expiryLots = locatedLots)
             } else {
                 item
             }
@@ -350,8 +358,45 @@ class InventoryItemDetailFragment : Fragment() {
         ExpiryLotRules.sorted(lots).forEach { lot ->
             val label = lot.expiryDate?.let(DateUtils::formatDisplayDate)
                 ?: getString(R.string.no_expiry_tracked)
-            addSummaryRow(label, formatQuantity(lot.quantity), lot.expiryColor())
+            addExpiryBatchRow(lot, label)
         }
+    }
+
+    private fun addExpiryBatchRow(lot: ExpiryLot, dateLabel: String) {
+        val row = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            minimumHeight = resources.getDimensionPixelSize(R.dimen.item_form_row_height)
+            setPadding(
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_sm),
+                resources.getDimensionPixelSize(R.dimen.item_form_horizontal_padding),
+                resources.getDimensionPixelSize(R.dimen.space_sm)
+            )
+        }
+        row.addView(LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            addView(TextView(requireContext()).apply {
+                text = dateLabel
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_secondary))
+                textSize = 15f
+            })
+            addView(TextView(requireContext()).apply {
+                text = lot.branchName.ifBlank { getString(R.string.unassigned_branch) }
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.inventory_text_secondary))
+                textSize = 13f
+                setPadding(0, resources.getDimensionPixelSize(R.dimen.space_xs), 0, 0)
+            })
+        })
+        row.addView(TextView(requireContext()).apply {
+            text = formatQuantity(lot.quantity)
+            setTextColor(ContextCompat.getColor(requireContext(), lot.expiryColor()))
+            textSize = 15f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        binding.expirySummaryRowsContainer.addView(row)
+        addThinDivider(binding.expirySummaryRowsContainer)
     }
 
     private fun addSummaryRow(label: String, value: String, valueColorRes: Int) {
@@ -442,7 +487,7 @@ class InventoryItemDetailFragment : Fragment() {
                 }
             }
         }
-        return ExpiryLotRules.combineByExpiry(compatibleLots)
+        return ExpiryLotRules.combineByLocationAndExpiry(compatibleLots)
     }
 
     private fun showTransactionTypeSheet() {

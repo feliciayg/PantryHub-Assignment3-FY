@@ -63,7 +63,11 @@ class TransactionFilterFragment : Fragment() {
             container = binding.filterRowsContainer,
             label = getString(R.string.transaction_filter_member),
             value = draftFilters.memberName,
-            valueColorRes = if (draftFilters.memberName.isNotBlank()) R.color.inventory_primary else R.color.inventory_text_primary,
+            valueColorRes = if (draftFilters.memberId.isNotBlank() || draftFilters.memberName.isNotBlank()) {
+                R.color.inventory_primary
+            } else {
+                R.color.inventory_text_primary
+            },
             onClick = ::showMemberSelector
         )
         addInteractiveFilterRow(
@@ -180,7 +184,8 @@ class TransactionFilterFragment : Fragment() {
     private fun showMemberSelector() {
         val options = uniqueMovementValues(
             titleProvider = { it.performedByName.ifBlank { getString(R.string.unknown_member) } },
-            idProvider = { it.performedByName.trim() },
+            // Use the Firebase UID when available so a display-name change does not break history filtering.
+            idProvider = { it.performedBy.ifBlank { it.performedByName.trim() } },
             subtitleProvider = { movement ->
                 movement.movementType.toReadableType()
             },
@@ -193,9 +198,12 @@ class TransactionFilterFragment : Fragment() {
             title = getString(R.string.transaction_filter_member),
             searchHint = getString(R.string.search_member_name),
             options = options,
-            selectedId = draftFilters.memberName
+            selectedId = draftFilters.memberId.ifBlank { draftFilters.memberName }
         ) { option ->
-            draftFilters = draftFilters.copy(memberName = option?.id.orEmpty())
+            draftFilters = draftFilters.copy(
+                memberId = option?.id.orEmpty(),
+                memberName = option?.title.orEmpty()
+            )
             renderRows()
         }
     }

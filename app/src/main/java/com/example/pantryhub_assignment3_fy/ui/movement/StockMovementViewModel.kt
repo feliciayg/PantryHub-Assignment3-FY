@@ -117,11 +117,21 @@ class StockMovementViewModel(
 
     fun applyTransactionFilters(filters: TransactionHistoryFilter) {
         _uiState.update {
+            val displayedMovements = it.movements.toDisplayedMovements(filters)
+            AppLogger.info(
+                area = "Transactions",
+                event = "transaction_filters_applied",
+                message = "Transaction history filters applied.",
+                "dateStart" to filters.dateSelection?.localStartMillis,
+                "dateEndExclusive" to filters.dateSelection?.localEndExclusiveMillis,
+                "member" to filters.memberName,
+                "resultCount" to displayedMovements.size
+            )
             it.copy(
                 appliedFilters = filters,
                 transactionFilter = filters.transactionType,
                 hasActiveFilters = filters.hasActiveFilters(),
-                displayedMovements = it.movements.toDisplayedMovements(filters)
+                displayedMovements = displayedMovements
             )
         }
     }
@@ -140,16 +150,22 @@ class StockMovementViewModel(
         val filtered = filter { movement ->
             val movementAt = movement.transactionAt.takeIf { it > 0L } ?: movement.createdAt
             val dateMatches = filters.dateSelection?.let { selection ->
-                val endExclusive = selection.normalizedEndMillis + DAY_IN_MILLIS
-                movementAt in selection.normalizedStartMillis until endExclusive
+                movementAt in selection.localStartMillis until selection.localEndExclusiveMillis
             } ?: true
             val itemMatches = if (filters.itemId.isBlank()) {
                 true
             } else {
                 movement.inventoryItemId == filters.itemId
             }
-            val memberMatches = filters.memberName.isBlank() ||
-                movement.performedByName.equals(filters.memberName, ignoreCase = true)
+            val memberMatches = when {
+                filters.memberId.isNotBlank() -> {
+                    movement.performedBy == filters.memberId ||
+                        (movement.performedBy.isBlank() &&
+                            movement.performedByName.equals(filters.memberName, ignoreCase = true))
+                }
+                filters.memberName.isBlank() -> true
+                else -> movement.performedByName.equals(filters.memberName, ignoreCase = true)
+            }
             val partnerMatches = filters.partnerName.isBlank() ||
                 movement.counterpartyName.equals(filters.partnerName, ignoreCase = true)
             val locationMatches = if (filters.locationId.isBlank()) {
@@ -220,7 +236,4 @@ class StockMovementViewModel(
         }
     }
 
-    companion object {
-        private const val DAY_IN_MILLIS = 24L * 60L * 60L * 1000L
-    }
 }

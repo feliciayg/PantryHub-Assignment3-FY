@@ -188,11 +188,9 @@ class TransactionDetailsViewModel(
                     imageUrl = item?.imageUrl.orEmpty().ifBlank { source.imageUrl },
                     itemName = source.itemName,
                     identifier = source.identifierText(),
-                    secondaryText = destination?.let {
-                        "${source.branchName.ifBlank { "From" }} -> ${it.branchName.ifBlank { "To" }}"
-                    }.orEmpty(),
-                    quantityHighlight = source.quantity.clean(),
-                    balanceSummary = "${source.quantityBefore.clean()} ${source.unit} -> ${source.quantityAfter.clean()} ${source.unit}".trim(),
+                    secondaryText = source.balanceWithLocation("From"),
+                    quantityHighlight = "${source.quantity.clean()} ${source.unit}".trim(),
+                    balanceSummary = destination?.balanceWithLocation("To").orEmpty(),
                     accentColorRes = color
                 )
             }
@@ -259,6 +257,13 @@ class TransactionDetailsViewModel(
         sku.isNotBlank() -> "SKU: $sku"
         barcode.isNotBlank() -> "Barcode: $barcode"
         else -> ""
+    }
+
+    private fun StockMovement.balanceWithLocation(fallbackLocation: String): String {
+        val location = branchName.ifBlank { fallbackLocation }
+        val before = "${quantityBefore.clean()} $unit".trim()
+        val after = "${quantityAfter.clean()} $unit".trim()
+        return "$location: $before -> $after"
     }
 
     private fun Double.clean(): String = if (this % 1.0 == 0.0) toInt().toString() else toString()

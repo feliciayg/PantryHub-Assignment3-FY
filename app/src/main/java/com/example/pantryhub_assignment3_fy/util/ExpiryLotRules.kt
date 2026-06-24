@@ -41,6 +41,27 @@ object ExpiryLotRules {
             .let(::sorted)
     }
 
+    /** Keeps branch-level expiry quantities separate for multi-location detail screens. */
+    fun combineByLocationAndExpiry(lots: List<ExpiryLot>): List<ExpiryLot> {
+        return lots.filter { it.quantity > 0.0 }
+            .groupBy { lot ->
+                val locationKey = lot.branchId.ifBlank { lot.branchName.trim().lowercase() }
+                locationKey to lot.expiryDate
+            }
+            .map { entry ->
+                val expiryDate = entry.key.second
+                val matching = entry.value
+                matching.first().copy(
+                    id = matching.joinToString("_") { it.id },
+                    expiryDate = expiryDate,
+                    quantity = matching.sumOf { it.quantity },
+                    createdAt = matching.minOfOrNull { it.createdAt } ?: 0L,
+                    updatedAt = matching.maxOfOrNull { it.updatedAt } ?: 0L
+                )
+            }
+            .let(::sorted)
+    }
+
     fun expandForExpiryUi(items: List<InventoryItem>): List<InventoryItem> {
         return items.flatMap { item ->
             effectiveLots(item)

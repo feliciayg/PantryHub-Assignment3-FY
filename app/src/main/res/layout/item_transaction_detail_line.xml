@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textColor="@color/inventory_text_primary"
                 android:textSize="@dimen/text_size_body"
                 android:textStyle="bold"
@@ -44,24 +44,14 @@
 
             <TextView
                 android:id="@+id/identifierTextView"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:textColor="@color/inventory_text_secondary"
                 android:textSize="@dimen/text_size_caption"
                 tools:text="SKU: FIS-FIS-0001" />
-
-            <TextView
-                android:id="@+id/secondaryTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/inventory_text_secondary"
-                android:textSize="14sp"
-                tools:text="Expires: 17 June 2026" />
-
         </LinearLayout>
 
         <!-- Quantity Change Section -->
@@ -75,25 +65,36 @@
                 android:id="@+id/quantityHighlightTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_sm"
+                android:maxLines="1"
                 android:textColor="@color/transaction_stock_in_blue"
-                android:textSize="24sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 tools:text="+5" />
-
-            <TextView
-                android:id="@+id/balanceSummaryTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:gravity="end"
-                android:textAlignment="viewEnd"
-                android:textColor="@color/inventory_text_secondary"
-                android:textSize="12sp"
-                tools:text="0 pack → 5 pack" />
-
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Balance details use full-width rows so branch names and quantities stay readable. -->
+    <TextView
+        android:id="@+id/secondaryTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="@dimen/space_sm"
+        android:textColor="@color/inventory_text_secondary"
+        android:textSize="14sp"
+        tools:text="From: Puchong Branch: 17 bottles -> 14 bottles" />
+
+    <TextView
+        android:id="@+id/balanceSummaryTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/inventory_text_secondary"
+        android:textSize="14sp"
+        tools:text="To: Main Branch: 28 bottles -> 31 bottles" />
 
     <!-- Divider -->
     <View
